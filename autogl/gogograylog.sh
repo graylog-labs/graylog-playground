@@ -10,7 +10,7 @@ UYELLOW='\033[4;33m'
 BGREEN='\033[1;32m' 
 
 if [ "$EUID" -ne 0 ]
-  then echo "This script needs to run as root. Please sudo su before running"
+  then echo -e "${URED}This script needs to run as root${NC}"
   exit
 fi
 
@@ -61,7 +61,7 @@ else
 fi
 
 if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
-	echo "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
+	echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
 	exit 64
 fi
 
@@ -100,7 +100,7 @@ elif [ "$NFT_IS_PRESENT" ]; then FIREWALL=nft; fi;
 if [ "$APT_IS_PRESENT" ]; then
 	export DEBIAN_FRONTEND=noninteractive
     if [ "$DOCKER_IS_INSTALLED" ]; then
-        echo "${URED}Removing current docker install${NC}"
+        echo -e "${URED}Removing current docker install${NC}"
         sudo apt-get remove docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
     fi
     updateSystem
@@ -138,14 +138,14 @@ if [ ! -f ~/docker-compose.yml ]; then
 fi
 
 function addFirewallRule {
-	echo "Adding firewall rule for port $1 ($2) via $FIREWALL..."
+	echo -e "Adding firewall rule for port $1 ($2) via $FIREWALL..."
 	case "$FIREWALL" in
-		none) echo "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
+		none) echo -e "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
 		ufw) ufw allow from any to any port "$1" proto tcp comment "$2" ;;
 		firewalld) firewall-cmd "--add-port=$1/tcp" --permanent && firewall-cmd --reload ;;
 		iptables) iptables -A INPUT -p tcp -m tcp --dport "$1" -j ACCEPT -m comment --comment "$2" && iptables-save > /etc/iptables/rules.v4 ;;
 		nft) nft add rule filter INPUT tcp dport "$1" accept comment "\"$2\"" ;;
-		*) echo "${URED}Unsupported Firewall!${NC}" ;;
+		*) echo -e "${URED}Unsupported Firewall!${NC}" ;;
 	esac
 }
 
