@@ -66,7 +66,7 @@ if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
 fi
 
 function updateSystem {
-	echo "${UGREEN}Updating System...${NC}"
+	echo -e "${UGREEN}Updating System...${NC}"
 	if [ "$APT_IS_PRESENT" ]; then
 		apt-get update &>> "$LOG_FILE"
 		apt-get upgrade -y &>> "$LOG_FILE"
@@ -107,7 +107,7 @@ if [ "$APT_IS_PRESENT" ]; then
 
     apt-get install -y ca-certificates curl gnupg lsb-release wget &>> "$LOG_FILE"
     echo -e "${UGREEN}Installing Docker${NC}"
-    mkdir -p /etc/apt/keyrings
+    mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
     curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     updateSystem
@@ -172,7 +172,7 @@ count=0
 while ! curl -s -u 'admin:yabba dabba doo' http://localhost:9000/api/system/cluster/nodes &>> "$LOG_FILE"; do
 	((count++))
     if [ "$count" -eq "30" ]; then
-        echo "${URED}Welp. Something went terribly wrong. Check the log file: $LOG_FILE. I'm giving up now! Byeeeeee${NC}"
+        echo -e "${URED}Welp. Something went terribly wrong. Check the log file: $LOG_FILE. I'm giving up now! Byeeeeee${NC}"
         exit 1
     else
         echo -e "${BGREEN}Waiting for graylog to come online${NC}"
