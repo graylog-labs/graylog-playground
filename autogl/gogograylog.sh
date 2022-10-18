@@ -82,6 +82,8 @@ if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
         exit 1
     fi
+    else
+        rm ~/docker-compose.yml &>> "$LOG_FILE" #cleanup potential left-overs if re-running
 fi
 
 if [ "$UFW_IS_PRESENT" ]; then
