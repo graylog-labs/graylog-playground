@@ -32,6 +32,11 @@ YUM_IS_PRESENT="$(isPresent yum)"
 JQ_IS_PRESENT="$(isPresent jq)"
 IP_IS_PRESENT="$(isPresent ip)"
 
+#Test for WSL
+if grep -qi microsoft /proc/version; then
+  WSL=1
+fi
+
 LOG_FILE="$HOME/gldockerinstall-$(date +%Y%m%d-%H%M%S).log"
 INSTALL_SUMMARY=~/gldockerinstall.log
 date > "$LOG_FILE"
@@ -167,6 +172,11 @@ sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -
 if [ "$YUM_IS_PRESENT" ]; then
     systemctl enable docker.service &>> "$LOG_FILE"
     systemctl restart docker &>> "$LOG_FILE"
+fi
+
+#Because WSL
+if [ "$WSL" ]; then
+    service docker start &>> "$LOG_FILE"
 fi
 
 echo -e "${UGREEN}Starting up Docker Containers${NC}"
