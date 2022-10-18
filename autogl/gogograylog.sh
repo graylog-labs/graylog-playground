@@ -162,7 +162,12 @@ echo -e "${UGREEN}Updating Memory Configurations to match system${NC}"
 sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "s+Xmx2g+Xmx$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -Xmx$Q_RAM\m -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true\"" ~/docker-compose.yml
-#
+
+#Because RH
+if [ "$YUM_IS_PRESENT" ]; then
+    systemctl enable docker.service &>> "$LOG_FILE"
+    systemctl restart docker &>> "$LOG_FILE"
+fi
 
 echo -e "${UGREEN}Starting up Docker Containers${NC}"
 docker compose -f ~/docker-compose.yml pull -q &>> "$LOG_FILE"
