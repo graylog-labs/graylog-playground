@@ -32,7 +32,7 @@ else
 	INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
 fi
 
-if [ "$ARCH" != "x86_64" ]; then
+if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
 	echo "Graylog is only supported on x86_64 systems. You are running $ARCH"
 	exit 64
 fi
@@ -84,7 +84,7 @@ else
 	exit
 fi
 
-wget https://raw.githubusercontent.com/Graylog2/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
 if [ ! -f ~/docker-compose.yml ]; then
     echo -e "Failed to grab docker compose file from GIT... Check your internet connection and try again"
     exit 1337
