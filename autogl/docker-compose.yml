@@ -49,6 +49,8 @@ services:
       - "514:514/udp"     # Syslog UDP
       - "514:514/tcp"     # Syslog TCP
       - "5044:5044/tcp"   # Beats
+      - "5050:5050/tcp"   # RAW TCP
+      - "5050:5050/udp"   # RAW UDP
       - "5555:5555/udp"   # CEF TCP
       - "5555:5555/udp"   # CEF UDP
       - "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
