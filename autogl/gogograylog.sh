@@ -96,7 +96,10 @@ fi
 
 if [ "$UFW_IS_PRESENT" ]; then
 	UFWSTATUS=$(ufw status)
-	if [[ "$UFWSTATUS" =~ "inactive" ]]; then unset UFW_IS_PRESENT; fi
+	if [[ "$UFWSTATUS" =~ "inactive" ]]; then unset UFW_IS_PRESENT; fi #No rules set
+elif [ "NFT_IS_PRESENT" ]; then
+    NFTSTATUS=$(nft list ruleset)
+    if [ -z "$NFTSTATUS" ]; then unset NFT_IS_PRESENT; fi #No rules set
 fi
 
 FIREWALL=none
@@ -196,11 +199,10 @@ if [ "$WSL" ]; then
     service docker start &>> "$LOG_FILE"
 fi
 
-
 #JIC Script is ran more than once, cleanup.
 GLDOVOL=$(docker volume ls | awk '{ print $2 }' | grep root_)
 if [[ $GLDOVOL == *"graylog"* ]]; then
-    echo -e "&{URED}Removing Existing Graylog Docker Related Volumes${NC}"
+    echo -e "${URED}Removing Existing Graylog Docker Related Volumes${NC}"
     docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
     docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
     for vol in $GLDOVOL
