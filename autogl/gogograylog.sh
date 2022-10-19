@@ -196,6 +196,19 @@ if [ "$WSL" ]; then
     service docker start &>> "$LOG_FILE"
 fi
 
+
+#JIC Script is ran more than once, cleanup.
+GLDOVOL=$(docker volume ls | awk '{ print $2 }' | grep root_)
+if [[ $GLDOVOL == *"graylog"* ]]; then
+    echo -e "&{URED}Removing Existing Graylog Docker Related Volumes${NC}"
+    docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
+    docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
+    for vol in $GLDOVOL
+    do
+        docker volume rm -f $vol &>> "$LOG_FILE"
+    done
+fi
+
 echo -e "${UGREEN}Starting up Docker Containers${NC}"
 docker compose -f ~/docker-compose.yml pull -q &>> "$LOG_FILE"
 docker compose -f ~/docker-compose.yml create &>> "$LOG_FILE"
