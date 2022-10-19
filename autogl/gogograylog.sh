@@ -92,6 +92,7 @@ if [ "$DOCKER_IS_INSTALLED" ]; then
     fi
     else
         rm ~/docker-compose.yml &>> "$LOG_FILE" #cleanup potential left-overs if re-running
+        rm ~/gl_* &>> "$LOG_FILE" #cleanup potential left-overs if re-running
 fi
 
 if [ "$UFW_IS_PRESENT" ]; then
