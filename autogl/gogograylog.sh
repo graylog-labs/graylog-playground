@@ -55,7 +55,7 @@ else
 fi
 
 #Give some nice details
-echo -e "${IBLACK}System Information${NC}\nTotal Memory:         ${UGREEN}$TOTAL_MEM MB${NC}\nRAM given to Graylog: ${UGREEN}$HALF_MEM MB${NC}\nSystem Architecture:  ${UGREEN}$ARCH${NC}\nInteral IP:           ${UGREEN}$INTERNAL_IP${NC}\nExternal IP:          ${UGREEN}$EXTERNAL_IP${NC}\nLogfile:              ${UGREEN}$LOG_FILE${NC}\n"
+echo -e "${IBLACK}System Information${NC}\nTotal Memory:         ${UGREEN}$TOTAL_MEM MB${NC}\nRAM given to Graylog: ${UGREEN}$HALF_MEM MB${NC}\nSystem Architecture:  ${UGREEN}$ARCH${NC}\nInternal IP:           ${UGREEN}$INTERNAL_IP${NC}\nExternal IP:          ${UGREEN}$EXTERNAL_IP${NC}\nLogfile:              ${UGREEN}$LOG_FILE${NC}\n"
 
 if [ $TOTAL_MEM -lt 2000 ]; then
     echo -e "Graylog ${URED}cannot run on less then 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment"
@@ -251,4 +251,3 @@ echo -e "${BGREEN}Password: ${UYELLOW}yabba dabba doo${NC}"
 echo -e "Docker Compose file is located: ${UYELLOW}$(ls ~/docker-compose.yml)${NC}"
 echo -e "Make changes as needed to open more ports for inputs!"
 echo -e "To make changes, edit the compose file and run:\n${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
-
