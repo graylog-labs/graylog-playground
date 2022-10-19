@@ -109,7 +109,7 @@ if [ "$APT_IS_PRESENT" ]; then
 	export DEBIAN_FRONTEND=noninteractive
     if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "${URED}Removing current docker install${NC}"
-        sudo apt-get remove docker docker-engine docker.io containerd runc jq &>> "$LOG_FILE"
+        sudo apt-get remove -y docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
     fi
     updateSystem
 
@@ -119,19 +119,19 @@ if [ "$APT_IS_PRESENT" ]; then
     curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     updateSystem
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin openjdk-11-jre-headless &>> "$LOG_FILE"
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin openjdk-11-jre-headless jq &>> "$LOG_FILE"
  
 elif [ "$YUM_IS_PRESENT" ]; then
 	    if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "${URED}Removing current docker install${NC}"
-        yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc jq &>> "$LOG_FILE"
+        yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc &>> "$LOG_FILE"
     fi
     updateSystem
     echo -e "${UGREEN}Installing Docker${NC}" 
     yum install -y yum-utils &>> "$LOG_FILE"
     if [[ "$ID" == "rhel" ]]; then ID=centos;fi
     yum-config-manager --add-repo https://download.docker.com/linux/$ID/docker-ce.repo &>> "$LOG_FILE"
-    yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin wget &>> "$LOG_FILE"
+    yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin wget jq &>> "$LOG_FILE"
 
 else
 	echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
