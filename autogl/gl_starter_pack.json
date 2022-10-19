@@ -1,0 +1,755 @@
+{
+  "v": 1,
+  "id": "93851612-3600-49cb-970a-b4beeaa6a93f",
+  "rev": 1,
+  "name": "Graylog Input Starter Pack",
+  "summary": "Base common inputs for docker deployment",
+  "description": "Commonly used inputs for graylog",
+  "vendor": "Graylog Professional Services",
+  "url": "https://www.graylog.org/",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "41e7e438-d385-460e-a975-6bbcafb28d47",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Palo Alto Networks v9+ TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5556
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "store_full_message": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "timezone": {
+            "@type": "string",
+            "@value": "UTC"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.integrations.inputs.paloalto9.PaloAlto9xInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "plugin-version",
+          "plugin": "org.graylog.integrations.IntegrationsPlugin",
+          "version": ">=4.3.8"
+        },
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "86327cf9-dcd4-4c8c-aaa8-c3cf495c533c",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "GELF UDP"
+        },
+        "configuration": {
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 12201
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "decompress_size_limit": {
+            "@type": "integer",
+            "@value": 8388608
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.gelf.udp.GELFUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "17fae614-5b6b-4c44-af32-23222567eed8",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CEF UDP"
+        },
+        "configuration": {
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5555
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "timezone": {
+            "@type": "string",
+            "@value": "Etc/UTC"
+          },
+          "locale": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "use_full_names": {
+            "@type": "boolean",
+            "@value": false
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.plugins.cef.input.CEFUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "6eb2fcb4-5cae-4290-8720-0421023ff17d",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Beats TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5044
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "no_beats_prefix": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.plugins.beats.Beats2Input"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "62d7db9e-82f4-4d9c-ae90-d01a1cc59fbb",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Syslog UDP"
+        },
+        "configuration": {
+          "expand_structured_data": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 514
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "force_rdns": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "allow_override_date": {
+            "@type": "boolean",
+            "@value": true
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "store_full_message": {
+            "@type": "boolean",
+            "@value": false
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.syslog.udp.SyslogUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "61d22d85-6d00-4d92-8750-1d68ba6260bd",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Palo Alto Networks v8.x TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5557
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "SYSTEM_TEMPLATE": {
+            "@type": "string",
+            "@value": "position,field,type\n1,receive_time,STRING\n2,serial_number,STRING\n3,type,STRING\n4,content_threat_type,STRING\n5,future_use1,STRING\n6,generated_time,STRING\n7,virtual_system,STRING\n8,event_id,STRING\n9,object,STRING\n10,future_use2,STRING\n11,future_use3,STRING\n12,module,STRING\n13,severity,STRING\n14,description,STRING\n15,sequence_number,STRING\n16,action_flags,STRING\n17,device_group_hierarchy_l1,STRING\n18,device_group_hierarchy_l2,STRING\n19,device_group_hierarchy_l3,STRING\n20,device_group_hierarchy_l4,STRING\n21,virtual_system_name,STRING\n22,device_name,STRING"
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "TIMEZONE": {
+            "@type": "string",
+            "@value": "UTC"
+          },
+          "TRAFFIC_TEMPLATE": {
+            "@type": "string",
+            "@value": "position,field,type\n1,receive_time,STRING\n2,serial_number,STRING\n3,type,STRING\n4,threat_content_type,STRING\n5,future_use1,STRING\n6,generated_time,STRING\n7,src_addr,STRING\n8,dest_addr,STRING\n9,nat_src_addr,STRING\n10,nat_dest_addr,STRING\n11,rule_name,STRING\n12,src_user,STRING\n13,dest_user,STRING\n14,application,STRING\n15,virtual_system,STRING\n16,src_zone,STRING\n17,dest_zone,STRING\n18,inbound_interface,STRING\n19,outbound_interface,STRING\n20,log_action,STRING\n21,future_use2,STRING\n22,session_id,LONG\n23,repeat_count,LONG\n24,src_port,LONG\n25,dest_port,LONG\n26,nat_src_port,LONG\n27,nat_dest_port,LONG\n28,flags,STRING\n29,protocol,STRING\n30,action,STRING\n31,bytes,LONG\n32,bytes_sent,LONG\n33,bytes_received,LONG\n34,packets,LONG\n35,start_time,STRING\n36,elapsed_time,STRING\n37,category,STRING\n38,future_use3,STRING\n39,sequence_number,STRING\n40,action_flags,STRING\n41,src_location,STRING\n42,dest_location,STRING\n43,future_use4,STRING\n44,packets_sent,LONG\n45,packets_received,LONG\n46,session_end_reason,STRING\n47,device_group_hierarchy_l1,STRING\n48,device_group_hierarchy_l2,STRING\n49,device_group_hierarchy_l3,STRING\n50,device_group_hierarchy_l4,STRING\n51,virtual_system_name,STRING\n52,device_name,STRING\n53,action_src,STRING\n54,src_vm_uuid,STRING\n55,dest_vm_uuid,STRING\n56,tunnel_id_imsi,STRING\n57,monitor_tag_imei,STRING\n58,parent_session_id,STRING\n59,parent_start_time,STRING\n60,tunnel_type,STRING\n61,sctp_association_id,STRING\n62,sctp_chunks,STRING\n63,sctp_chunks_sent,STRING\n64,sctp_chunks_received,STRING"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "THREAT_TEMPLATE": {
+            "@type": "string",
+            "@value": "position,field,type\n1,receive_time,STRING\n2,serial_number,STRING\n3,type,STRING\n4,threat_content_type,STRING\n5,future_use1,STRING\n6,generated_time,STRING\n7,src_addr,STRING\n8,dest_addr,STRING\n9,nat_src_addr,STRING\n10,nat_dest_addr,STRING\n11,rule_name,STRING\n12,src_user,STRING\n13,dest_user,STRING\n14,application,STRING\n15,virtual_system,STRING\n16,src_zone,STRING\n17,dest_zone,STRING\n18,inbound_interface,STRING\n19,outbound_interface,STRING\n20,log_action,STRING\n21,future_use2,STRING\n22,session_id,LONG\n23,repeat_count,LONG\n24,src_port,LONG\n25,dest_port,LONG\n26,nat_src_port,LONG\n27,nat_dest_port,LONG\n28,flags,STRING\n29,protocol,STRING\n30,action,STRING\n31,miscellaneous,STRING\n32,threat_id,STRING\n33,category,STRING\n34,severity,STRING\n35,direction,STRING\n36,sequence_number,STRING\n37,action_flags,STRING\n38,src_location,STRING\n39,dest_location,STRING\n40,future_use3,STRING\n41,content_type,STRING\n42,pcap_id,STRING\n43,file_digest,STRING\n44,cloud,STRING\n45,url_index,LONG\n46,user_agent,STRING\n47,file_type,STRING\n48,x-forwarded-for,STRING\n49,referer,STRING\n50,sender,STRING\n51,subject,STRING\n52,recipient,STRING\n53,report_id,LONG\n54,device_group_hierarchy_l1,LONG\n55,device_group_hierarchy_l2,LONG\n56,device_group_hierarchy_l3,LONG\n57,device_group_hierarchy_l4,LONG\n58,virtual_system_name,STRING\n59,device_name,STRING\n60,future_use4,STRING\n61,src_vm_uuid,STRING\n62,dest_vm_uuid,STRING\n63,http_method,STRING\n64,tunnel_id_imsi,STRING\n65,monitor_tag_imei,STRING\n66,parent_session_id,STRING\n67,parent_start_time,STRING\n68,tunnel_type,STRING\n69,threat_category,STRING\n70,content_version,STRING\n71,future_use5,STRING\n72,sctp_association_id,LONG\n73,payload_protocol_id,LONG\n74,http_headers,STRING"
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.integrations.inputs.paloalto.PaloAltoTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "plugin-version",
+          "plugin": "org.graylog.integrations.IntegrationsPlugin",
+          "version": ">=4.3.8"
+        },
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "e48eb456-44b6-4181-9349-69db91bfa29e",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "GELF TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 12201
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": true
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "decompress_size_limit": {
+            "@type": "integer",
+            "@value": 8388608
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.gelf.tcp.GELFTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "783f3381-245c-4bc0-94b2-62419e929406",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Syslog TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 514
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "force_rdns": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "allow_override_date": {
+            "@type": "boolean",
+            "@value": true
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "expand_structured_data": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "store_full_message": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.syslog.tcp.SyslogTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "caa1ea72-17b5-4350-a866-31025c4a3ddd",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "CEF TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5555
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_full_names": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "timezone": {
+            "@type": "string",
+            "@value": "Etc/UTC"
+          },
+          "locale": {
+            "@type": "string",
+            "@value": ""
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog.plugins.cef.input.CEFTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    }
+  ]
+}
