@@ -51,10 +51,10 @@ services:
       - "5044:5044/tcp"   # Beats
       - "5050:5050/tcp"   # RAW TCP
       - "5050:5050/udp"   # RAW UDP
-      - "5555:5555/udp"   # CEF TCP
+      - "5555:5555/tcp"   # CEF TCP
       - "5555:5555/udp"   # CEF UDP
       - "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
-      - "5556:5557/tcp"   # Palo Alto Networks v8.x TCP
+      - "5557:5557/tcp"   # Palo Alto Networks v8.x TCP
       - "9000:9000/tcp"   # Server API
       - "12201:12201/tcp" # GELF TCP
       - "12201:12201/udp" # GELF UDP
