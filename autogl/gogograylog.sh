@@ -94,10 +94,13 @@ if [ "$DOCKER_IS_INSTALLED" ]; then
     rm ~/gl_* &>> "$LOG_FILE" #cleanup potential left-overs if re-running
 fi
 
+#Firewall Cleanup
 if [ "$UFW_IS_PRESENT" ]; then
 	UFWSTATUS=$(ufw status)
 	if [[ "$UFWSTATUS" =~ "inactive" ]]; then unset UFW_IS_PRESENT; fi #No rules set
-elif [ "$NFT_IS_PRESENT" ]; then
+fi
+
+if [ "$NFT_IS_PRESENT" ]; then
     NFTSTATUS=$(nft list ruleset)
     if [ -z "$NFTSTATUS" ]; then unset NFT_IS_PRESENT; fi #No rules set
 fi
