@@ -1,7 +1,7 @@
 {
-  "v": 1,
+  "v": "1",
   "id": "93851612-3600-49cb-970a-b4beeaa6a93f",
-  "rev": 1,
+  "rev": 2,
   "name": "Graylog Input Starter Pack",
   "summary": "Base common inputs for docker deployment",
   "description": "Commonly used inputs for graylog",
@@ -737,6 +737,138 @@
         "type": {
           "@type": "string",
           "@value": "org.graylog.plugins.cef.input.CEFTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "0f593a4c-cbd8-47d6-87c0-0881a849b9d1",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "RAW UDP"
+        },
+        "configuration": {
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5050
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.raw.udp.RawUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.8+8c4705e"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "4982fca8-7764-40a8-b4ce-16e2dbe4b7c7",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "RAW TCP"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 5050
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 16
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": ""
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.raw.tcp.RawTCPInput"
         },
         "global": {
           "@type": "boolean",
