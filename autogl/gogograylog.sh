@@ -1,6 +1,6 @@
 #!/bin/bash
 # Graylog Automated Docker Install
-# Recommed 16GB of RAM and at least 2 cpus but it CAN run on less
+# Recommend 16GB of RAM and at least 2 cpus but it CAN run on less
 clear
 
 NC='\033[0m'
@@ -8,6 +8,7 @@ URED='\033[4;31m'
 UGREEN='\033[4;32m'
 UYELLOW='\033[4;33m'
 BGREEN='\033[1;32m' 
+IBLACK='\033[0;100m'
 
 if [ "$EUID" -ne 0 ]
   then echo -e "${URED}This script needs to run as root${NC}"
@@ -54,9 +55,11 @@ else
 fi
 
 #Give some nice details
-echo -e "System Information\nTotal Memory: $TOTAL_MEM\nRAM given to Graylog: $HALF_MEM\nSystem Architecture: $ARCH\nInteral IP: $INTERNAL_IP\nExternal IP: $EXTERNAL_IP\nLogfile: $LOG_FILE\n"
+echo -e "${IBLACK}System Information${NC}\nTotal Memory:         ${UGREEN}$TOTAL_MEM MB${NC}\nRAM given to Graylog: ${UGREEN}$HALF_MEM MB${NC}\nSystem Architecture:  ${UGREEN}$ARCH${NC}\nInteral IP:           ${UGREEN}$INTERNAL_IP${NC}\nExternal IP:          ${UGREEN}$EXTERNAL_IP${NC}\nLogfile:              ${UGREEN}$LOG_FILE${NC}\n"
 
-if [ $TOTAL_MEM -lt 8000 ]; then 
+if [ $TOTAL_MEM -lt 2000 ]; then
+    echo -e "Graylog ${URED}cannot run on less then 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment"
+elif [ $TOTAL_MEM -lt 8000 ]; then 
     echo -e "Graylog running on a single node will perform much better with ${URED}8GB${NC} or more system memory"
     echo -e "Graylog will use ${URED}$HALF_MEM${NC}MB of your total: ${URED}$TOTAL_MEM${NC}MB"
     echo -e "${UYELLOW}Performance might be impacted...${NC}"
@@ -106,7 +109,7 @@ if [ "$APT_IS_PRESENT" ]; then
 	export DEBIAN_FRONTEND=noninteractive
     if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "${URED}Removing current docker install${NC}"
-        sudo apt-get remove docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
+        sudo apt-get remove docker docker-engine docker.io containerd runc jq &>> "$LOG_FILE"
     fi
     updateSystem
 
@@ -121,7 +124,7 @@ if [ "$APT_IS_PRESENT" ]; then
 elif [ "$YUM_IS_PRESENT" ]; then
 	    if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "${URED}Removing current docker install${NC}"
-        yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc  &>> "$LOG_FILE"
+        yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc jq &>> "$LOG_FILE"
     fi
     updateSystem
     echo -e "${UGREEN}Installing Docker${NC}" 
@@ -132,7 +135,7 @@ elif [ "$YUM_IS_PRESENT" ]; then
 
 else
 	echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
-	echo -e "Automated installation is only availble for Debian and Red-Hat based distrubitions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
+	echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
 	echo -e "${UGREEN}$NAME${URED} is not a supported distribution at this time.${NC}"
 	exit
 fi
@@ -144,23 +147,37 @@ if [ ! -f ~/docker-compose.yml ]; then
 fi
 
 function addFirewallRule {
-	echo -e "Adding firewall rule for port $1 ($2) via $FIREWALL..."
-	case "$FIREWALL" in
+	if [ "$YUM_IS_PRESENT" ]; then
+        IPTABLESLOC="/etc/sysconfig/iptables"
+    else
+        IPTABLESLOC="/etc/iptables/rules.v4"
+    fi
+    echo -e "Adding firewall rule for port $1 $2 ($3) via $FIREWALL..."
+    case "$FIREWALL" in
 		none) echo -e "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
-		ufw) ufw allow from any to any port "$1" proto tcp comment "$2" ;;
-		firewalld) firewall-cmd "--add-port=$1/tcp" --permanent && firewall-cmd --reload ;;
-		iptables) iptables -A INPUT -p tcp -m tcp --dport "$1" -j ACCEPT -m comment --comment "$2" && iptables-save > /etc/iptables/rules.v4 ;;
-		nft) nft add rule filter INPUT tcp dport "$1" accept comment "\"$2\"" ;;
-		*) echo -e "${URED}Unsupported Firewall!${NC}" ;;
+		ufw) ufw allow from any to any port "$1" proto $2 comment "$3" ;;
+		firewalld) firewall-cmd "--add-port=$1/$2" --permanent && firewall-cmd --reload ;;
+		iptables) iptables -A INPUT -p $2 -m $2 --dport "$1" -j ACCEPT -m comment --comment "$3" && iptables-save > $IPTABLESLOC ;;
+		nft) nft add rule filter INPUT $2 dport "$1" accept comment "\"$3\"" ;;
+		*) echo -e "${URED}Unsupported Firewall: $FIREWALL${NC}" ;;
 	esac
 }
 
 if [[ "$FIREWALL" != "none" ]]; then
-    echo -e "${UGREEN}Adding Firewall Rules for Graylog Service Ports and Inputsc"
-    addFirewallRule "9000" "Default GUI"
-    addFirewallRule "5044" "Beats TCP Input"
-    addFirewallRule "12201" "GELF TCP Input"
-    addFirewallRule "9000" "Default GUI"
+    echo -e "${UGREEN}Adding Firewall Rules for Graylog Service Ports and Inputs${NC}"
+    addFirewallRule "443" "tcp" "Default GUI"
+    addFirewallRule "514" "tcp" "Syslog TCP Input"
+    addFirewallRule "514" "udp" "Syslog TCP Input"
+    addFirewallRule "5044" "tcp" "Beats TCP Input"
+    addFirewallRule "5050" "tcp" "RAW TCP Input"
+    addFirewallRule "5050" "udp" "RAW UDP Input"
+    addFirewallRule "5555" "tcp" "CEF TCP Input"
+    addFirewallRule "5555" "udp" "CEF UDP Input"
+    addFirewallRule "5556" "tcp" "Palo Alto Networks v9+ TCP Input"
+    addFirewallRule "5557" "tcp" "Palo Alto Networks v8.x TCP Input"
+    addFirewallRule "9000" "tcp" "Default GUI"
+    addFirewallRule "12201" "tcp" "GELF TCP Input"
+    addFirewallRule "12201" "udp" "GELF UDP Input"
 fi
 
 echo -e "${UGREEN}Updating Memory Configurations to match system${NC}"
@@ -194,6 +211,19 @@ while ! curl -s -u 'admin:yabba dabba doo' http://localhost:9000/api/system/clus
         echo -e "${BGREEN}Waiting for graylog to come online${NC}"
         sleep 10s
     fi   
+done
+
+#Add inputs via CP
+wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
+for entry in ~/gl_*
+do
+  echo -e "\n\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
+  id=$(cat $entry | jq -r '.id')
+  ver=$(cat $entry | jq -r '.rev')
+  echo -e "\n\nID:${UGREEN}$id${NC} and Version: ${UGREEN}$ver${NC}\n"
+  curl -u 'admin:yabba dabba doo' -XPOST "http://localhost:9000/api/system/content_packs"  -H 'Content-Type: application/json' -H 'X-Requested-By: PS_Packer' -d @"$entry" &>> "$LOG_FILE"
+  echo -e "\n\nEnabling Content Package: ${UGREEN}gl_starter_pack${NC}\n"
+  curl -u 'admin:yabba dabba doo' -XPOST "http://localhost:9000/api/system/content_packs/$id/$ver/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
 done
 
 clear
