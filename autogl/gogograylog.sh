@@ -228,6 +228,12 @@ fi
 #Because WSL, start and enable service to run on wsl start
 if [ "$WSL" ]; then
     service docker start &>> "$LOG_FILE"
+    #Since WSL IP Changes on fresh start, prompt it for users via dashrc. Prevent adding twice on a re-run
+    BRCF=$(cat ~/.bashrc)
+    if [[ "$BRCF" != *"Graylog Instance:"* ]]; then
+        echo "echo \"Graylog Instance: $(hostname -I | cut -f 1 -d ' '):9000"\" >> ~/.bashrc
+    fi
+    #Add to start with WSL
     if [ -f /etc/wsl.conf ]; then
         WSLCONF=$(cat /etc/wsl.conf)
         if [[ "$WSLCONF" != *"service docker start"* ]]; then
