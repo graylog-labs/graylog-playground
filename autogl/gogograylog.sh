@@ -262,7 +262,7 @@ docker compose -f ~/docker-compose.yml create &>> "$LOG_FILE"
 docker compose -f ~/docker-compose.yml up -d
 
 count=0
-while ! curl -s -u 'admin:yabba dabba doo' http://localhost:9000/api/system/cluster/nodes &>> "$LOG_FILE"; do
+while ! curl -s -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes &>> "$LOG_FILE"; do
 	((count++))
     if [ "$count" -eq "30" ]; then
         echo -e "${URED}Welp. Something went terribly wrong. Check the log file: $LOG_FILE. I'm giving up now! Byeeeeee${NC}"
@@ -281,9 +281,9 @@ do
   id=$(cat $entry | jq -r '.id')
   ver=$(cat $entry | jq -r '.rev')
   echo -e "\n\nID:${UGREEN}$id${NC} and Version: ${UGREEN}$ver${NC}\n"
-  curl -u 'admin:yabba dabba doo' -XPOST "http://localhost:9000/api/system/content_packs"  -H 'Content-Type: application/json' -H 'X-Requested-By: PS_Packer' -d @"$entry" &>> "$LOG_FILE"
+  curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs"  -H 'Content-Type: application/json' -H 'X-Requested-By: PS_Packer' -d @"$entry" &>> "$LOG_FILE"
   echo -e "\n\nEnabling Content Package: ${UGREEN}gl_starter_pack${NC}\n"
-  curl -u 'admin:yabba dabba doo' -XPOST "http://localhost:9000/api/system/content_packs/$id/$ver/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
+  curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs/$id/$ver/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
 done
 
 clear
