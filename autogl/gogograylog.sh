@@ -103,7 +103,7 @@ fi
 if [ "$NFT_IS_PRESENT" ]; then
     NFTSTATUS=$(nft list ruleset)
     if [ -z "$NFTSTATUS" ]; then unset NFT_IS_PRESENT; fi #No rules set
-    if [[ $NFTSTATUS == *"INPUT"* ]]; then unset NFT_IS_PRESENT; fi #No Ingress rules set
+    if [[ $NFTSTATUS != *"INPUT"* ]]; then unset NFT_IS_PRESENT; fi #No Ingress rules set
 fi
 
 FIREWALL=none
