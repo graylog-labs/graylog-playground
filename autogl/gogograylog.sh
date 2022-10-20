@@ -102,6 +102,25 @@ if [ "$DOCKER_IS_INSTALLED" ]; then
     rm ~/gl_* &>> "$LOG_FILE" #cleanup potential left-overs if re-running
 fi
 
+#Set Admin Password
+PSWD="bunk"
+until [ "$PSWD" == "$PSWD2" ]
+do
+        echo -e "${GREEN}Enter Desired Graylog Login Password${NC}"
+        read -s -p "Password: " PSWD
+        echo -e "${GREEN}\nEnter Desired Graylog Login Password again${NC}"
+        read -s -p "Password: " PSWD2
+        if [[ "$PSWD" == "$PSWD2" ]]; then
+                GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
+        else
+                echo -e "${RED}\nPasswords do not match, press enter to try again${NC}"
+                read
+        fi
+done
+unset PSWD
+unset PSWD2
+
+
 #Firewall Cleanup
 if [ "$UFW_IS_PRESENT" ]; then
 	UFWSTATUS=$(ufw status)
@@ -199,6 +218,8 @@ echo -e "${UGREEN}Updating Memory Configurations to match system${NC}"
 sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "s+Xmx2g+Xmx$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -Xmx$Q_RAM\m -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true\"" ~/docker-compose.yml
+sed -i "s+941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6+$GLSHA256+g" ~/docker-compose.yml
+unset GLSHA256
 
 #Because RH
 if [ "$YUM_IS_PRESENT" ]; then
@@ -206,9 +227,17 @@ if [ "$YUM_IS_PRESENT" ]; then
     systemctl restart docker &>> "$LOG_FILE"
 fi
 
-#Because WSL
+#Because WSL, start and enable service to run on wsl start
 if [ "$WSL" ]; then
     service docker start &>> "$LOG_FILE"
+    if [ -f /etc/wsl.conf ]; then
+        WSLCONF=$(cat /etc/wsl.conf)
+        if [[ "$WSLCONF" != *"service docker start"* ]]; then
+            echo -e "command=\"service docker start\"" >> /etc/wsl.conf
+        fi
+    else
+        echo -e "[boot]\ncommand=\"service docker start\"" > /etc/wsl.conf
+    fi
 fi
 
 #JIC Script is ran more than once, cleanup.
