@@ -49,7 +49,7 @@ else
 fi
 
 if [ "$CURL_IS_PRESENT" ]; then
-	EXTERNAL_IP=$(curl https://ipecho.net/plain 2> /dev/null)
+	EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
 else
 	EXTERNAL_IP=$(wget -qO- https://ipecho.net/plain 2> /dev/null)
 fi
