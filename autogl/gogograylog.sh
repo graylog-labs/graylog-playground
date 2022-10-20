@@ -106,10 +106,11 @@ fi
 PSWD="bunk"
 until [ "$PSWD" == "$PSWD2" ]
 do
-        echo -e "${GREEN}Enter Desired Graylog Login Password${NC}"
+        echo -e "${GREEN}\nEnter Desired Graylog Login Password${NC}"
         read -s -p "Password: " PSWD
         echo -e "${GREEN}\nEnter Desired Graylog Login Password again${NC}"
         read -s -p "Password: " PSWD2
+        echo -e "\n"
         if [[ "$PSWD" == "$PSWD2" ]]; then
                 GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
         else
