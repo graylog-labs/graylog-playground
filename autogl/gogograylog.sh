@@ -118,9 +118,6 @@ do
                 read
         fi
 done
-unset PSWD
-unset PSWD2
-
 
 #Firewall Cleanup
 if [ "$UFW_IS_PRESENT" ]; then
@@ -286,7 +283,10 @@ done
 clear
 echo -e "${BGREEN}Your Graylog Instance is up and running\nAcceess it here: ${UYELLOW}http://$INTERNAL_IP:9000${BGREEN}\nIf external access it here: ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
 echo -e "${BGREEN}Default user: ${UYELLOW}admin${NC}"
-echo -e "${BGREEN}Password: ${UYELLOW}yabba dabba doo${NC}"
+echo -e "${BGREEN}Password: ${UYELLOW}$PSWD${NC}"
 echo -e "Docker Compose file is located: ${UYELLOW}$(ls ~/docker-compose.yml)${NC}"
 echo -e "Make changes as needed to open more ports for inputs!"
 echo -e "To make changes, edit the compose file and run:\n${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
+
+unset PSWD
+unset PSWD2
