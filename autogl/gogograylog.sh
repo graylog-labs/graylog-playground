@@ -32,6 +32,7 @@ APT_IS_PRESENT="$(isPresent apt-get)"
 YUM_IS_PRESENT="$(isPresent yum)"
 JQ_IS_PRESENT="$(isPresent jq)"
 IP_IS_PRESENT="$(isPresent ip)"
+CURL_IS_PRESENT="$(isPresent curl)"
 
 #Test for WSL
 if grep -qi microsoft /proc/version; then
