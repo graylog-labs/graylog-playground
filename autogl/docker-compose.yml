@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mongodb:
-    image: "mongo:4.4"
+    image: "mongo:6.0"
     volumes:
       - "mongodb_data:/data/db"
     restart: "always"
@@ -17,7 +17,7 @@ services:
       action.auto_create_index: "false"
       DISABLE_INSTALL_DEMO_CONFIG: "true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
       DISABLE_SECURITY_PLUGIN: "true" # disables security plugin entirely in OpenSearch by setting plugins.security.
-    image: "opensearchproject/opensearch:1"
+    image: "opensearchproject/opensearch:2"
     ulimits:
       memlock:
         hard: -1
@@ -30,7 +30,7 @@ services:
     restart: "always"
 
   graylog:
-    image: "graylog/graylog-enterprise:4.3"
+    image: "graylog/graylog-enterprise:5.0.0-rc.1-1"
     depends_on:
       opensearch:
         condition: "service_started"
