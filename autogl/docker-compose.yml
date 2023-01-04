@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mongodb:
-    image: "mongo:6.0"
+    image: "mongo:6"
     volumes:
       - "mongodb_data:/data/db"
     restart: "always"
@@ -30,7 +30,7 @@ services:
     restart: "always"
 
   graylog:
-    image: "graylog/graylog-enterprise:5.0.0-rc.1-1"
+    image: "graylog/graylog-enterprise:5"
     depends_on:
       opensearch:
         condition: "service_started"
