@@ -1,0 +1,37 @@
+//JSON Flattening Rule
+//Dan McDowell - Graylog Professional Services - enablement@graylog.com
+//02-09-2023
+//v1.0:
+//Rule assumes all messages on "JSONTEST" input are JSON. 
+//Remove's escape characters
+//Uses the flatten function to convert nested content to underscored keys
+//Sets the new flattend keys to fields
+//Uses flex parse date function to ensure timestamp is correct
+//Replaces message field content to save on storage post processing
+
+rule "JSON FLATTEN"
+when
+    from_input(name:"JSONTEST")
+then
+    let sJson = to_string($message.message);
+    
+    //Remove dEscape Characters 
+    let sJson = regex_replace(
+        pattern: "^\\[|\\]$",
+        value: sJson,
+        replacement: ""
+    );
+    
+    //Flatten the JSON
+    let rsJson = flatten_json(value: sJson, array_handler: "flatten", stringify: false); 
+    
+    //Set the fields from the Flattened JSON
+    set_fields(to_map(rsJson));
+    
+    //Correct any incorrect date formatted timestamp
+    let new_date = flex_parse_date(to_string($message.timestamp));
+    set_field("timestamp", new_date);
+    
+    //Remove existing long message field 
+    set_field("message", "parsed user data");
+end
