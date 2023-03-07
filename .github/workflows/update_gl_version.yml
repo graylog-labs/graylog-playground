@@ -1,11 +1,11 @@
 name: "Update Graylog Version"
 on:
   workflow_dispatch:
-  
+
 jobs:
-  job1: 
-    name: Update-Docker-Compose-File
+  Update-Docker-Compose-File:
     runs-on: ubuntu-latest
+    
     steps:
       - Name: Checkout repository
         uses: actions/checkout@v3
