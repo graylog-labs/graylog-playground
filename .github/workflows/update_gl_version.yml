@@ -1,6 +1,7 @@
 name: "Update Graylog Version"
 on:
-  workflow_dispatch:
+  schedule:
+    - cron:  '0 0 * * *'    # At midnight, daily
 
 jobs:
   Update-Docker-Compose-File:
