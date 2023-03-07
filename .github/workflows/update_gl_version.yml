@@ -1,5 +1,7 @@
----
 name: "Update Graylog Version"
+on:
+  workflow_dispatch:
+  
 jobs:
   job1: 
     name: Update-Docker-Compose-File
