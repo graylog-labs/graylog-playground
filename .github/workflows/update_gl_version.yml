@@ -4,13 +4,14 @@ on:
 
 jobs:
   Update-Docker-Compose-File:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
     
     steps:
-      - Name: Checkout repository
-        uses: actions/checkout@v3
+      - name: "Checkout repository"
+        uses: "actions/checkout@v3"
 
-      - Name: Check Current Version and update if needed 
+      - name: "Check Current Version and update if needed" 
+        shell: "bash"
         run: |
           lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | tail -n 1)
           dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' autogl/docker-compose.yml | tr -d '"' | tr -d " ")
