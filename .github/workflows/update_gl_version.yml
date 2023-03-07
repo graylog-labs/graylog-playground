@@ -1,14 +1,15 @@
 ---
 name: "Update Graylog Version"
 jobs:
-  Update-Docker-Compose-File
+  job1: 
+    name: Update-Docker-Compose-File
     runs-on: ubuntu-latest
     steps:
       - Name: Checkout repository
         uses: actions/checkout@v3
 
       - Name: Check Current Version and update if needed 
-      - run: |
+        run: |
           lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | tail -n 1)
           dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' autogl/docker-compose.yml | tr -d '"' | tr -d " ")
           if [[ "$lgl" != "$dcv" ]]; then echo "update plz"; else echo "updated already"; exit 0; fi
