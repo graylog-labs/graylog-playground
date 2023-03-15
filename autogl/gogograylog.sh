@@ -161,8 +161,7 @@ elif [ "$YUM_IS_PRESENT" ]; then
     updateSystem
     echo -e "${UGREEN}Installing Docker${NC}" 
     yum install -y yum-utils &>> "$LOG_FILE"
-    if [[ "$ID" == "rhel" ]]; then ID=centos;fi
-    if [[ "$ID" == "rocky"]]; then ID=centos;fi
+    ID=centos
     yum-config-manager --add-repo https://download.docker.com/linux/$ID/docker-ce.repo &>> "$LOG_FILE"
     yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin wget jq &>> "$LOG_FILE"
 
