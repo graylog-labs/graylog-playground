@@ -1,7 +1,7 @@
 {
   "v": "1",
   "id": "7e0e1b31-2a12-4bb8-abb4-85f17e8af23c",
-  "rev": 2,
+  "rev": 3,
   "name": "ISP Speed Test",
   "summary": "Speed Test Results from Custom JSON -> GELF script",
   "description": "Includes Dashboard, Stream and routing rule to place messages in Stream",
@@ -15,7 +15,7 @@
         "name": "dashboard",
         "version": "2"
       },
-      "id": "e2fc04b4-da77-4a6e-b999-4a84a78a4fca",
+      "id": "fa97d498-0bd9-4d36-8403-2e3b705027e8",
       "data": {
         "summary": {
           "@type": "string",
@@ -34,7 +34,7 @@
                 "filters": [
                   {
                     "type": "stream",
-                    "id": "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "id": "33a037f8-79f3-4622-9f3f-55722e00e944"
                   }
                 ]
               },
@@ -49,16 +49,14 @@
                     "type": "elasticsearch",
                     "query_string": ""
                   },
-                  "name": "trend",
+                  "name": "chart",
                   "timerange": {
-                    "source": "search_type",
-                    "id": "5010ef74-1c7e-438d-b776-9e6c8f34c2c5",
-                    "offset": "1i",
-                    "type": "offset"
+                    "from": 86400,
+                    "type": "relative"
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
@@ -72,7 +70,7 @@
                   "rollup": true,
                   "row_groups": [],
                   "type": "pivot",
-                  "id": "62453131-3ced-449a-8108-1acdd577256c",
+                  "id": "5010ef74-1c7e-438d-b776-9e6c8f34c2c5",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -102,6 +100,37 @@
                   "row_groups": [],
                   "type": "pivot",
                   "id": "759afa71-952e-42e3-8f7c-7d3c73e0aa3b",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "5010ef74-1c7e-438d-b776-9e6c8f34c2c5",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(upload_bandwidth)",
+                      "field": "upload_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "62453131-3ced-449a-8108-1acdd577256c",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -147,38 +176,7 @@
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "avg",
-                      "id": "avg(upload_bandwidth)",
-                      "field": "upload_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "5010ef74-1c7e-438d-b776-9e6c8f34c2c5",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
@@ -211,193 +209,6 @@
               ]
             },
             {
-              "id": "a4892336-d42c-4e96-9e8e-6cb322a2f4bd",
-              "timerange": {
-                "from": 1800,
-                "type": "relative"
-              },
-              "filter": {
-                "type": "or",
-                "filters": [
-                  {
-                    "type": "stream",
-                    "id": "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  }
-                ]
-              },
-              "filters": [],
-              "query": {
-                "type": "elasticsearch",
-                "query_string": ""
-              },
-              "search_types": [
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "min",
-                      "id": "min(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "08a1870b-fdfe-42ee-8bac-0ebea4092ca3",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "trend",
-                  "timerange": {
-                    "source": "search_type",
-                    "id": "d2ee8da4-1fef-493d-a79d-8033fe7c40c8",
-                    "offset": "1i",
-                    "type": "offset"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "avg",
-                      "id": "avg(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "a4105c1b-48bd-4709-896c-9adda1b5c37e",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "avg",
-                      "id": "avg(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "d2ee8da4-1fef-493d-a79d-8033fe7c40c8",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "latest",
-                      "id": "latest(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [
-                    {
-                      "type": "time",
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "interval": {
-                        "type": "auto",
-                        "scaling": 0.1
-                      }
-                    }
-                  ],
-                  "type": "pivot",
-                  "id": "195dbee6-e8f9-443d-898a-2e003fbe5268",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "max",
-                      "id": "max(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "bf504802-4895-4590-8619-a4ff7650460d",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                }
-              ]
-            },
-            {
               "id": "6684f93c-0aea-4a75-b5ac-cc4296f113f9",
               "timerange": {
                 "from": 1800,
@@ -408,7 +219,7 @@
                 "filters": [
                   {
                     "type": "stream",
-                    "id": "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "id": "33a037f8-79f3-4622-9f3f-55722e00e944"
                   }
                 ]
               },
@@ -430,40 +241,7 @@
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "avg",
-                      "id": "avg(upload_bandwidth)",
-                      "field": "upload_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "784c1c87-31ba-40b2-b067-56398274ac75",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "trend",
-                  "timerange": {
-                    "source": "search_type",
-                    "id": "1043632a-1bb1-46ac-aed3-70a50ac65865",
-                    "offset": "1i",
-                    "type": "offset"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
@@ -477,31 +255,10 @@
                   "rollup": true,
                   "row_groups": [],
                   "type": "pivot",
-                  "id": "06b2d959-b6c6-4699-84af-76b7ab9489b3",
+                  "id": "1043632a-1bb1-46ac-aed3-70a50ac65865",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": null,
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "offset": 0,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "filter": null,
-                  "decorators": [],
-                  "type": "messages",
-                  "id": "132a7614-980f-4ea3-921d-941f0e0834eb",
-                  "limit": 150,
-                  "filters": []
                 },
                 {
                   "query": {
@@ -515,32 +272,21 @@
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
                     {
-                      "type": "latest",
-                      "id": "latest(download_bandwidth)",
-                      "field": "download_bandwidth"
+                      "type": "avg",
+                      "id": "avg(ping_latency)",
+                      "field": "ping_latency"
                     }
                   ],
                   "filter": null,
                   "rollup": true,
-                  "row_groups": [
-                    {
-                      "type": "time",
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "interval": {
-                        "type": "auto",
-                        "scaling": 1
-                      }
-                    }
-                  ],
+                  "row_groups": [],
                   "type": "pivot",
-                  "id": "e4044071-59f1-4e74-a6a6-3c05e11a313e",
+                  "id": "8658f212-3ade-48a4-bfce-a9c8395f6a12",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -570,6 +316,48 @@
                   "row_groups": [],
                   "type": "pivot",
                   "id": "449dfdd1-f037-414c-8eac-e624e922961e",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "latest",
+                      "id": "latest(upload_bandwidth)",
+                      "field": "upload_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 1
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "ff5f1bd7-0c3e-4aa9-9249-181bdf0d449b",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -637,6 +425,81 @@
                     "type": "elasticsearch",
                     "query_string": ""
                   },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "latest",
+                      "id": "latest(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 1
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "e4044071-59f1-4e74-a6a6-3c05e11a313e",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "784c1c87-31ba-40b2-b067-56398274ac75",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(upload_bandwidth)",
+                      "field": "upload_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "f1d6eb12-cf82-4a00-973e-bb706bccde74",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
                   "name": "trend",
                   "timerange": {
                     "source": "search_type",
@@ -646,7 +509,7 @@
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
@@ -677,21 +540,21 @@
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
                     {
                       "type": "avg",
-                      "id": "avg(ping_latency)",
-                      "field": "ping_latency"
+                      "id": "avg(upload_bandwidth)",
+                      "field": "upload_bandwidth"
                     }
                   ],
                   "filter": null,
                   "rollup": true,
                   "row_groups": [],
                   "type": "pivot",
-                  "id": "8658f212-3ade-48a4-bfce-a9c8395f6a12",
+                  "id": "784c1c87-31ba-40b2-b067-56398274ac75",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -780,72 +643,30 @@
                     "type": "elasticsearch",
                     "query_string": ""
                   },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "latest",
-                      "id": "latest(upload_bandwidth)",
-                      "field": "upload_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [
-                    {
-                      "type": "time",
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "interval": {
-                        "type": "auto",
-                        "scaling": 1
-                      }
-                    }
-                  ],
-                  "type": "pivot",
-                  "id": "ff5f1bd7-0c3e-4aa9-9249-181bdf0d449b",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
                   "name": "trend",
                   "timerange": {
                     "source": "search_type",
-                    "id": "784c1c87-31ba-40b2-b067-56398274ac75",
+                    "id": "1043632a-1bb1-46ac-aed3-70a50ac65865",
                     "offset": "1i",
                     "type": "offset"
                   },
                   "column_limit": null,
                   "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
                   ],
                   "row_limit": null,
                   "series": [
                     {
                       "type": "avg",
-                      "id": "avg(upload_bandwidth)",
-                      "field": "upload_bandwidth"
+                      "id": "avg(download_bandwidth)",
+                      "field": "download_bandwidth"
                     }
                   ],
                   "filter": null,
                   "rollup": true,
                   "row_groups": [],
                   "type": "pivot",
-                  "id": "f1d6eb12-cf82-4a00-973e-bb706bccde74",
+                  "id": "06b2d959-b6c6-4699-84af-76b7ab9489b3",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -875,79 +696,6 @@
                   "row_groups": [],
                   "type": "pivot",
                   "id": "bd558867-ca2a-426e-a383-897bb1bf5e58",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "latest",
-                      "id": "latest(ping_latency)",
-                      "field": "ping_latency"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [
-                    {
-                      "type": "time",
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "interval": {
-                        "type": "auto",
-                        "scaling": 1
-                      }
-                    }
-                  ],
-                  "type": "pivot",
-                  "id": "5ee1aa3a-be73-4ce4-8dfe-35a65c475877",
-                  "filters": [],
-                  "column_groups": [],
-                  "sort": []
-                },
-                {
-                  "query": {
-                    "type": "elasticsearch",
-                    "query_string": ""
-                  },
-                  "name": "chart",
-                  "timerange": {
-                    "from": 86400,
-                    "type": "relative"
-                  },
-                  "column_limit": null,
-                  "streams": [
-                    "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                  ],
-                  "row_limit": null,
-                  "series": [
-                    {
-                      "type": "avg",
-                      "id": "avg(download_bandwidth)",
-                      "field": "download_bandwidth"
-                    }
-                  ],
-                  "filter": null,
-                  "rollup": true,
-                  "row_groups": [],
-                  "type": "pivot",
-                  "id": "1043632a-1bb1-46ac-aed3-70a50ac65865",
                   "filters": [],
                   "column_groups": [],
                   "sort": []
@@ -1009,6 +757,256 @@
                   "filters": [],
                   "column_groups": [],
                   "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "latest",
+                      "id": "latest(ping_latency)",
+                      "field": "ping_latency"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 1
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "5ee1aa3a-be73-4ce4-8dfe-35a65c475877",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": null,
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "offset": 0,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "filter": null,
+                  "decorators": [],
+                  "type": "messages",
+                  "id": "132a7614-980f-4ea3-921d-941f0e0834eb",
+                  "limit": 150,
+                  "filters": []
+                }
+              ]
+            },
+            {
+              "id": "a4892336-d42c-4e96-9e8e-6cb322a2f4bd",
+              "timerange": {
+                "from": 1800,
+                "type": "relative"
+              },
+              "filter": {
+                "type": "or",
+                "filters": [
+                  {
+                    "type": "stream",
+                    "id": "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  }
+                ]
+              },
+              "filters": [],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "d2ee8da4-1fef-493d-a79d-8033fe7c40c8",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "a4105c1b-48bd-4709-896c-9adda1b5c37e",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "latest",
+                      "id": "latest(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "time",
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "interval": {
+                        "type": "auto",
+                        "scaling": 0.1
+                      }
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "195dbee6-e8f9-443d-898a-2e003fbe5268",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "33a037f8-79f3-4622-9f3f-55722e00e944"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "d2ee8da4-1fef-493d-a79d-8033fe7c40c8",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "min",
+                      "id": "min(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "08a1870b-fdfe-42ee-8bac-0ebea4092ca3",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "max",
+                      "id": "max(download_bandwidth)",
+                      "field": "download_bandwidth"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [],
+                  "type": "pivot",
+                  "id": "bf504802-4895-4590-8619-a4ff7650460d",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
                 }
               ]
             }
@@ -1049,47 +1047,7 @@
             },
             "widgets": [
               {
-                "id": "d2ccceba-070c-484e-b4b9-f174a69f7be8",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                ],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "avg(upload_bandwidth)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": true,
-                    "trend_preference": "HIGHER"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "22dcf84e-a544-4829-91af-44cdccb301b4",
+                "id": "dc3236bd-875a-4a75-beb3-3e438a82849f",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -1113,7 +1071,293 @@
                       "config": {
                         "name": null
                       },
-                      "function": "max(download_bandwidth)"
+                      "function": "max(upload_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": false,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "05efb857-7a95-4806-9db0-97a5e10fab8c",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
+                ],
+                "config": {
+                  "visualization": "line",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 1
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "latest(ping_latency)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "interpolation": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "5a5b8360-f142-44f5-a7d4-559167f32dc1",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
+                ],
+                "config": {
+                  "visualization": "line",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 1
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "latest(download_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "interpolation": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "769ca644-3527-4f92-b033-e425caf64621",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "min(upload_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": false,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "b252deec-cc6f-433e-9e6c-cf031cf8a8ba",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "max(ping_latency)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": false,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "6978fb2f-88d1-4ce0-926c-11b67108b412",
+                "type": "messages",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
+                ],
+                "config": {
+                  "fields": [
+                    "timestamp",
+                    "source"
+                  ],
+                  "show_message_row": true,
+                  "show_summary": true,
+                  "decorators": [],
+                  "sort": [
+                    {
+                      "type": "pivot",
+                      "field": "timestamp",
+                      "direction": "Descending"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "c260cf21-f93d-4c1d-ae0a-0a7df024736b",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Message Count"
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": null,
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "cb5fe1d7-24b0-4f85-8e24-5e4e08ad1421",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "min(download_bandwidth)"
                     }
                   ],
                   "rollup": false,
@@ -1165,75 +1409,7 @@
                 }
               },
               {
-                "id": "c260cf21-f93d-4c1d-ae0a-0a7df024736b",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": "Message Count"
-                      },
-                      "function": "count()"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": null,
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "6978fb2f-88d1-4ce0-926c-11b67108b412",
-                "type": "messages",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                ],
-                "config": {
-                  "fields": [
-                    "timestamp",
-                    "source"
-                  ],
-                  "show_message_row": true,
-                  "show_summary": true,
-                  "decorators": [],
-                  "sort": [
-                    {
-                      "type": "pivot",
-                      "field": "timestamp",
-                      "direction": "Descending"
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "05efb857-7a95-4806-9db0-97a5e10fab8c",
+                "id": "e71d3c34-0e6e-4a9f-a445-9e7444f0c1df",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -1246,7 +1422,7 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
                   "visualization": "line",
@@ -1272,213 +1448,7 @@
                       "config": {
                         "name": null
                       },
-                      "function": "latest(ping_latency)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "interpolation": "linear"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "cb5fe1d7-24b0-4f85-8e24-5e4e08ad1421",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "min(download_bandwidth)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": false,
-                    "trend_preference": "NEUTRAL"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "0612505f-f818-434c-be43-ea3c66c74505",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                ],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "avg(ping_latency)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": true,
-                    "trend_preference": "LOWER"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "b252deec-cc6f-433e-9e6c-cf031cf8a8ba",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "max(ping_latency)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": false,
-                    "trend_preference": "NEUTRAL"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "dc3236bd-875a-4a75-beb3-3e438a82849f",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "max(upload_bandwidth)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": false,
-                    "trend_preference": "NEUTRAL"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "5a5b8360-f142-44f5-a7d4-559167f32dc1",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                ],
-                "config": {
-                  "visualization": "line",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [
-                    {
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "type": "time",
-                      "config": {
-                        "interval": {
-                          "type": "auto",
-                          "scaling": 1
-                        }
-                      }
-                    }
-                  ],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "latest(download_bandwidth)"
+                      "function": "latest(upload_bandwidth)"
                     }
                   ],
                   "rollup": false,
@@ -1554,7 +1524,47 @@
                 }
               },
               {
-                "id": "769ca644-3527-4f92-b033-e425caf64621",
+                "id": "d2ccceba-070c-484e-b4b9-f174a69f7be8",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
+                ],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "avg(upload_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "HIGHER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "22dcf84e-a544-4829-91af-44cdccb301b4",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -1578,7 +1588,7 @@
                       "config": {
                         "name": null
                       },
-                      "function": "min(upload_bandwidth)"
+                      "function": "max(download_bandwidth)"
                     }
                   ],
                   "rollup": false,
@@ -1592,7 +1602,7 @@
                 }
               },
               {
-                "id": "e71d3c34-0e6e-4a9f-a445-9e7444f0c1df",
+                "id": "0612505f-f818-434c-be43-ea3c66c74505",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -1605,39 +1615,27 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
-                  "visualization": "line",
+                  "visualization": "numeric",
                   "column_limit": null,
                   "event_annotation": false,
                   "row_limit": null,
-                  "row_pivots": [
-                    {
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "type": "time",
-                      "config": {
-                        "interval": {
-                          "type": "auto",
-                          "scaling": 1
-                        }
-                      }
-                    }
-                  ],
+                  "row_pivots": [],
                   "series": [
                     {
                       "config": {
                         "name": null
                       },
-                      "function": "latest(upload_bandwidth)"
+                      "function": "avg(ping_latency)"
                     }
                   ],
                   "rollup": false,
                   "column_pivots": [],
                   "visualization_config": {
-                    "interpolation": "linear"
+                    "trend": true,
+                    "trend_preference": "LOWER"
                   },
                   "formatting_settings": null,
                   "sort": []
@@ -1657,7 +1655,7 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
                   "visualization": "numeric",
@@ -1861,6 +1859,84 @@
             },
             "widgets": [
               {
+                "id": "e72d97e8-e4cc-4d22-8632-e155f02b88e2",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "min(download_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": false,
+                    "trend_preference": "NEUTRAL"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "8d505828-1312-4a38-abd6-16f7a7d2889d",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
+                ],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "avg(download_bandwidth)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "HIGHER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
                 "id": "b90c32b3-7a2d-4d22-ba62-b55358c326c7",
                 "type": "aggregation",
                 "filter": null,
@@ -1874,7 +1950,7 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
                   "visualization": "area",
@@ -1916,84 +1992,6 @@
                       }
                     ]
                   },
-                  "sort": []
-                }
-              },
-              {
-                "id": "8d505828-1312-4a38-abd6-16f7a7d2889d",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
-                ],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "avg(download_bandwidth)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": true,
-                    "trend_preference": "HIGHER"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "e72d97e8-e4cc-4d22-8632-e155f02b88e2",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 86400,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "numeric",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "min(download_bandwidth)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "trend": false,
-                    "trend_preference": "NEUTRAL"
-                  },
-                  "formatting_settings": null,
                   "sort": []
                 }
               },
@@ -2112,7 +2110,7 @@
             },
             "widgets": [
               {
-                "id": "7053d4bc-fd3e-46a4-874e-9d7feda98986",
+                "id": "a06be449-47e7-4f57-b942-3f474f30da11",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -2125,39 +2123,27 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
-                  "visualization": "line",
+                  "visualization": "numeric",
                   "column_limit": null,
                   "event_annotation": false,
                   "row_limit": null,
-                  "row_pivots": [
-                    {
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "type": "time",
-                      "config": {
-                        "interval": {
-                          "type": "auto",
-                          "scaling": 1
-                        }
-                      }
-                    }
-                  ],
+                  "row_pivots": [],
                   "series": [
                     {
                       "config": {
                         "name": null
                       },
-                      "function": "latest(upload_bandwidth)"
+                      "function": "avg(upload_bandwidth)"
                     }
                   ],
                   "rollup": false,
                   "column_pivots": [],
                   "visualization_config": {
-                    "interpolation": "linear"
+                    "trend": true,
+                    "trend_preference": "HIGHER"
                   },
                   "formatting_settings": null,
                   "sort": []
@@ -2202,7 +2188,7 @@
                 }
               },
               {
-                "id": "a06be449-47e7-4f57-b942-3f474f30da11",
+                "id": "7053d4bc-fd3e-46a4-874e-9d7feda98986",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -2215,27 +2201,39 @@
                   "query_string": ""
                 },
                 "streams": [
-                  "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d"
+                  "33a037f8-79f3-4622-9f3f-55722e00e944"
                 ],
                 "config": {
-                  "visualization": "numeric",
+                  "visualization": "line",
                   "column_limit": null,
                   "event_annotation": false,
                   "row_limit": null,
-                  "row_pivots": [],
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "auto",
+                          "scaling": 1
+                        }
+                      }
+                    }
+                  ],
                   "series": [
                     {
                       "config": {
                         "name": null
                       },
-                      "function": "avg(upload_bandwidth)"
+                      "function": "latest(upload_bandwidth)"
                     }
                   ],
                   "rollup": false,
                   "column_pivots": [],
                   "visualization_config": {
-                    "trend": true,
-                    "trend_preference": "HIGHER"
+                    "interpolation": "linear"
                   },
                   "formatting_settings": null,
                   "sort": []
@@ -2351,10 +2349,44 @@
     {
       "v": "1",
       "type": {
+        "name": "pipeline",
+        "version": "1"
+      },
+      "id": "91584715-ea6b-4fd2-b791-2fd49a9b8ece",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Default Routing"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "pipeline \"Default Routing\"\nstage 0 match either\nrule \"Route - Internet Speed Tests\"\nend"
+        },
+        "connected_streams": [
+          {
+            "@type": "string",
+            "@value": "000000000000000000000001"
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.5+d61a926"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
         "name": "pipeline_rule",
         "version": "1"
       },
-      "id": "617a43e5-b738-4d12-b4d6-b9fa538314a7",
+      "id": "648d19d7-3b35-4078-8fd4-448d33ddc79a",
       "data": {
         "title": {
           "@type": "string",
@@ -2382,7 +2414,7 @@
         "name": "stream",
         "version": "1"
       },
-      "id": "5a9384d0-323f-4f1a-a580-bb6ae5fcd48d",
+      "id": "33a037f8-79f3-4622-9f3f-55722e00e944",
       "data": {
         "alarm_callbacks": [],
         "outputs": [],
