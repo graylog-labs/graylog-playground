@@ -69,4 +69,4 @@ rm ./gelf.tmp
 gelf=${gelf%?}
 gelf=$(echo -e "$gelf\n}")
 echo -e "$gelf" > ./gelf.tmp
-echo $gelf | nc -q 0 $1 $2
+echo $gelf | ncat -w 1 $1 $2
