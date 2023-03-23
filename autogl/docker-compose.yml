@@ -36,7 +36,7 @@ services:
         condition: "service_started"
       mongodb:
         condition: "service_started"
-    entrypoint: "/usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh"
+    entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
     environment:
       GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 10gb
       GRAYLOG_PASSWORD_SECRET: somepasswordpepper
