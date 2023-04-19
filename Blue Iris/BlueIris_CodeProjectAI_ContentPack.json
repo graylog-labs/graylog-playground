@@ -1,0 +1,1158 @@
+{
+  "v": 1,
+  "id": "ef716f91-ba5d-4aae-9064-7d4737fa2ac1",
+  "rev": 1,
+  "name": "Blue Iris AI Enabled Content Pack",
+  "summary": "Includes parsing rules, stream and dashboard",
+  "description": "For parsing and displaying AI log data from Blue Iris with Code Project AI",
+  "vendor": "Graylog Professional Services - Dan McDowell",
+  "url": "https://github.com/graylog-labs/graylog-playground",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline",
+        "version": "1"
+      },
+      "id": "3646132e-8075-4ac6-8828-778daa1e8d9b",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Blue Iris"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "pipeline \"Blue Iris\"\nstage 0 match either\nrule \"Parse - Blue Iris - Base Message\"\nrule \"Remove - Filebeats Fields\"\nrule \"Parse - Blue Iris - Base Message - Custom Alerts\"\nstage 1 match either\nrule \"Parse - Blue Iris - Motion Alert\"\nrule \"Parse - Blue Iris - AI Cancelled Events\"\nend"
+        },
+        "connected_streams": [
+          {
+            "@type": "string",
+            "@value": "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "dashboard",
+        "version": "2"
+      },
+      "id": "256dc42e-b17d-4d40-b0fa-0f5a12659d3c",
+      "data": {
+        "summary": {
+          "@type": "string",
+          "@value": "BI Dashboard with AI data tracked"
+        },
+        "search": {
+          "queries": [
+            {
+              "id": "75fa8e21-cbf2-4a0e-8d75-f6e94fa70711",
+              "timerange": {
+                "range": 0,
+                "type": "relative"
+              },
+              "filter": {
+                "type": "or",
+                "filters": [
+                  {
+                    "type": "stream",
+                    "id": "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  }
+                ]
+              },
+              "filters": [
+                {
+                  "type": "inlineQueryString",
+                  "title": "",
+                  "description": "",
+                  "queryString": "action:AI AND _exists_:Object",
+                  "negation": false,
+                  "disabled": true
+                }
+              ],
+              "query": {
+                "type": "elasticsearch",
+                "query_string": ""
+              },
+              "search_types": [
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": ""
+                  },
+                  "name": null,
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "offset": 0,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "filter": null,
+                  "decorators": [],
+                  "type": "messages",
+                  "id": "282f4bea-f2f4-4532-92bc-8aca08d5c005",
+                  "limit": 150,
+                  "filters": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "_exists_:ai_processing_time and !ai_processing_time:0"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(ai_processing_time)",
+                      "field": "ai_processing_time"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "limit": 30
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "4c0aef38-f495-44b5-9146-7d47d1954fca",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "message:\"network retry\""
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "count()",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "2d30b808-84ce-413a-b787-4bf4a61f8778",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "action:AI AND _exists_:Object"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "Average Processing Time",
+                      "field": "ai_processing_time"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "ce459d42-41ce-49ec-99d6-ad48359f22cb",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "ai_detection_type: Faces"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "from": 86400,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "latest",
+                      "id": "Last Detected Location",
+                      "field": "camera_short_name"
+                    },
+                    {
+                      "type": "latest",
+                      "id": "Time",
+                      "field": "event_timestamp"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "Object"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "195f8c80-1b0f-44ba-af0a-a18a7fa47ef2",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "_exists_:ai_processing_time and !ai_processing_time:0"
+                  },
+                  "name": "trend",
+                  "timerange": {
+                    "source": "search_type",
+                    "id": "4c0aef38-f495-44b5-9146-7d47d1954fca",
+                    "offset": "1i",
+                    "type": "offset"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(ai_processing_time)",
+                      "field": "ai_processing_time"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "limit": 30
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "c8e6da04-3cf7-4f29-bbfc-69e41dbb1f0f",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "action:AI AND _exists_:Object"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "avg",
+                      "id": "avg(ai_processing_time)",
+                      "field": "ai_processing_time"
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "Object"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "b65a8b75-08e1-4b40-b897-516a1fd8907e",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "action:MOTION_A"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "count()",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "5cec1d59-45ab-4071-83bb-e7ccc56bfaf5",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                },
+                {
+                  "query": {
+                    "type": "elasticsearch",
+                    "query_string": "action:AI AND _exists_:Object"
+                  },
+                  "name": "chart",
+                  "timerange": {
+                    "range": 0,
+                    "type": "relative"
+                  },
+                  "column_limit": null,
+                  "streams": [
+                    "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                  ],
+                  "row_limit": null,
+                  "series": [
+                    {
+                      "type": "count",
+                      "id": "count()",
+                      "field": null
+                    }
+                  ],
+                  "filter": null,
+                  "rollup": true,
+                  "row_groups": [
+                    {
+                      "type": "values",
+                      "fields": [
+                        "Object"
+                      ],
+                      "limit": 15
+                    }
+                  ],
+                  "type": "pivot",
+                  "id": "adaaa638-b9ea-4b83-8ac9-1854b29583a0",
+                  "filters": [],
+                  "column_groups": [],
+                  "sort": []
+                }
+              ]
+            }
+          ],
+          "parameters": [],
+          "requires": {},
+          "owner": "admin",
+          "created_at": "2023-04-14T19:11:41.164Z"
+        },
+        "created_at": "2023-03-31T03:39:02.665Z",
+        "requires": {},
+        "state": {
+          "75fa8e21-cbf2-4a0e-8d75-f6e94fa70711": {
+            "selected_fields": null,
+            "static_message_list_id": null,
+            "titles": {
+              "widget": {
+                "8c6473e7-d32f-4cf6-a9cc-72ca5efe1c4b": "Last Known Location of Person",
+                "f07f9fdf-50ce-430d-802a-428d6bbf68b8": "Average AI Processing Time by Camera",
+                "8aeec549-a8b7-42fa-b698-b7668ef8c2f2": "Average AI Processing Time",
+                "e95ec845-89a5-46a8-8eab-6cfcf208ef52": "Connection Failures by Camera",
+                "66edb699-e6ca-4b0e-a77a-74b4ad29a357": "Processing Time by Object",
+                "1cdb5fef-c4b7-40ae-b0e3-4e3b67c23943": "Message Count",
+                "ce9235dd-fbda-421a-af21-317be7f552df": "Motion Detected",
+                "e9aef553-0076-4597-8c8c-d12695f0860c": "Objects Detected",
+                "83863791-527d-41cd-8695-4d8e5c62ed49": "All Messages"
+              },
+              "tab": {
+                "title": "Overview"
+              }
+            },
+            "widgets": [
+              {
+                "id": "83863791-527d-41cd-8695-4d8e5c62ed49",
+                "type": "messages",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "fields": [
+                    "timestamp",
+                    "source"
+                  ],
+                  "show_message_row": true,
+                  "show_summary": true,
+                  "decorators": [],
+                  "sort": [
+                    {
+                      "type": "pivot",
+                      "field": "timestamp",
+                      "direction": "Descending"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "66edb699-e6ca-4b0e-a77a-74b4ad29a357",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "action:AI AND _exists_:Object"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "table",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "Object"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "avg(ai_processing_time)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": []
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "e9aef553-0076-4597-8c8c-d12695f0860c",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "action:AI AND _exists_:Object"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "pie",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "Object"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": null,
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "f07f9fdf-50ce-430d-802a-428d6bbf68b8",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "action:AI AND _exists_:Object"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "table",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Average Processing Time"
+                      },
+                      "function": "avg(ai_processing_time)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": []
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "8c6473e7-d32f-4cf6-a9cc-72ca5efe1c4b",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 86400,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "ai_detection_type: Faces"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "table",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "Object"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": "Last Detected Location"
+                      },
+                      "function": "latest(camera_short_name)"
+                    },
+                    {
+                      "config": {
+                        "name": "Time"
+                      },
+                      "function": "latest(event_timestamp)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": []
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "e95ec845-89a5-46a8-8eab-6cfcf208ef52",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "message:\"network retry\""
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "table",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "pinned_columns": []
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "8aeec549-a8b7-42fa-b698-b7668ef8c2f2",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "_exists_:ai_processing_time and !ai_processing_time:0"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "numeric",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 30,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 30
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "avg(ai_processing_time)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "trend": true,
+                    "trend_preference": "LOWER"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              },
+              {
+                "id": "ce9235dd-fbda-421a-af21-317be7f552df",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "range": 0,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": "action:MOTION_A"
+                },
+                "streams": [
+                  "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12"
+                ],
+                "config": {
+                  "visualization": "pie",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": 15,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "camera_short_name"
+                      ],
+                      "type": "values",
+                      "config": {
+                        "limit": 15
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "count()"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": null,
+                  "formatting_settings": null,
+                  "sort": []
+                }
+              }
+            ],
+            "widget_mapping": {
+              "e95ec845-89a5-46a8-8eab-6cfcf208ef52": [
+                "2d30b808-84ce-413a-b787-4bf4a61f8778"
+              ],
+              "83863791-527d-41cd-8695-4d8e5c62ed49": [
+                "282f4bea-f2f4-4532-92bc-8aca08d5c005"
+              ],
+              "66edb699-e6ca-4b0e-a77a-74b4ad29a357": [
+                "b65a8b75-08e1-4b40-b897-516a1fd8907e"
+              ],
+              "e9aef553-0076-4597-8c8c-d12695f0860c": [
+                "adaaa638-b9ea-4b83-8ac9-1854b29583a0"
+              ],
+              "f07f9fdf-50ce-430d-802a-428d6bbf68b8": [
+                "ce459d42-41ce-49ec-99d6-ad48359f22cb"
+              ],
+              "8c6473e7-d32f-4cf6-a9cc-72ca5efe1c4b": [
+                "195f8c80-1b0f-44ba-af0a-a18a7fa47ef2"
+              ],
+              "ce9235dd-fbda-421a-af21-317be7f552df": [
+                "5cec1d59-45ab-4071-83bb-e7ccc56bfaf5"
+              ],
+              "8aeec549-a8b7-42fa-b698-b7668ef8c2f2": [
+                "c8e6da04-3cf7-4f29-bbfc-69e41dbb1f0f",
+                "4c0aef38-f495-44b5-9146-7d47d1954fca"
+              ]
+            },
+            "positions": {
+              "83863791-527d-41cd-8695-4d8e5c62ed49": {
+                "col": 1,
+                "row": 18,
+                "height": 4,
+                "width": "Infinity"
+              },
+              "66edb699-e6ca-4b0e-a77a-74b4ad29a357": {
+                "col": 4,
+                "row": 11,
+                "height": 3,
+                "width": 3
+              },
+              "e9aef553-0076-4597-8c8c-d12695f0860c": {
+                "col": 1,
+                "row": 14,
+                "height": 4,
+                "width": 4
+              },
+              "f07f9fdf-50ce-430d-802a-428d6bbf68b8": {
+                "col": 1,
+                "row": 11,
+                "height": 3,
+                "width": 3
+              },
+              "8c6473e7-d32f-4cf6-a9cc-72ca5efe1c4b": {
+                "col": 5,
+                "row": 14,
+                "height": 4,
+                "width": 5
+              },
+              "ce9235dd-fbda-421a-af21-317be7f552df": {
+                "col": 7,
+                "row": 11,
+                "height": 3,
+                "width": 3
+              },
+              "8aeec549-a8b7-42fa-b698-b7668ef8c2f2": {
+                "col": 10,
+                "row": 11,
+                "height": 3,
+                "width": 3
+              },
+              "e95ec845-89a5-46a8-8eab-6cfcf208ef52": {
+                "col": 10,
+                "row": 14,
+                "height": 4,
+                "width": 3
+              }
+            },
+            "formatting": {
+              "highlighting": []
+            },
+            "display_mode_settings": {
+              "positions": {}
+            }
+          }
+        },
+        "properties": [],
+        "owner": "admin",
+        "title": {
+          "@type": "string",
+          "@value": "Blue Iris AI Enabled"
+        },
+        "type": "DASHBOARD",
+        "description": {
+          "@type": "string",
+          "@value": "Using custom alert triggers and some scripting to pull JSON data from codeproject AI to populate a object driven dashboard. This can help you with tuning the AI, identifying network issues, overly sensitive cameras (motion detected) and more"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3b638389-c335-4308-951b-afff68eb0abd",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Route - Blue Iris"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Route - Blue Iris\"\nwhen\n    grok (pattern: \"%{INT}%{SPACE}(?<event_timestamp>[0-9]?[0-9]\\\\/[0-9]?[0-9]\\\\/[0-9][0-9][0-9][0-9] [0-9]?[0-9]:[0-9]?[0-9]:[0-9]?[0-9].[0-9]?[0-9]?[0-9] [AaPp][Mm])%{SPACE}%{WORD}%{SPACE}%{WORD}:?%{SPACE}?%{GREEDYDATA}?\",\n     value: to_string($message.message)\n     ).matches == true \n     ||\n    grok (pattern: \"%{TIMESTAMP_ISO8601} %{WORD} %{WORD}: %{DATA}\\\\] %{GREEDYDATA}:%{INT}\\\\% %{NOTSPACE} %{NOTSPACE} %{INT}%{NOTSPACE}\",\n     value: to_string($message.message)\n     ).matches == true   \nthen\n    route_to_stream(\n        name:\"Blue Iris\",\n        remove_from_default:true\n        );\n        \nset_field(\n    field:\"RoutedFrom\",\n    value:\"Route - Blue Iris\"\n    );\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "85c8e0fb-059d-4496-b9ec-ebf24050abaa",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Parse - Blue Iris - Motion Alert"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Parse - Blue Iris - Motion Alert\"\nwhen\n    $message.action == \"MOTION_A\"\nthen\n    set_field(\"message\",concat(to_string($message.camera_short_name), \": Motion detected\"));\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "3d50d124-3819-4459-818a-37d30bacae4c",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Remove - Filebeats Fields"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Remove - Filebeats Fields\"\nwhen\n    has_field(\"filebeat_agent_type\")\nthen\n    //Remove them filebeats junk, no one needs this\n    remove_field(\"beats_type\");\n    remove_field(\"filebeat_@metadata_beat\");\n    remove_field(\"filebeat_@metadata_type\");\n    remove_field(\"filebeat_@metadata_version\");\n    remove_field(\"filebeat_@timestamp\");\n    remove_field(\"filebeat_agent_ephemeral_id\");\n    remove_field(\"filebeat_agent_hostname\");\n    remove_field(\"filebeat_agent_id\");\n    remove_field(\"filebeat_agent_name\");\n    remove_field(\"filebeat_agent_type\");\n    remove_field(\"filebeat_agent_version\");\n    remove_field(\"filebeat_collector_node_id\");\n    remove_field(\"filebeat_ecs_version\");\n    remove_field(\"filebeat_host_name\");\n    remove_field(\"filebeat_input_type\");\n    remove_field(\"filebeat_log_file_path\");\n    remove_field(\"filebeat_log_offset\");\n    remove_field(\"filebeat_tags\");\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "fc521409-1dd7-4260-9816-a6644c0c65cf",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Parse - Blue Iris - Base Message - Custom Alerts"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Parse - Blue Iris - Base Message - Custom Alerts\"\nwhen\n    grok (pattern: \"%{TIMESTAMP_ISO8601} %{WORD} %{WORD}: \\\\[%{NOTSPACE}] %{DATA}:%{INT}\\\\% %{NOTSPACE} %{NOTSPACE} %{INT}%{NOTSPACE}\",\n     value: to_string($message.message)\n     ).matches == true\nthen\n    let grokp = grok(\n        pattern:\"%{TIMESTAMP_ISO8601:event_timestamp} %{WORD:camera_short_name} %{WORD:action}: \\\\[%{NOTSPACE:ai_detection_type}] %{DATA:Object}:%{INT:ai_certainty}\\\\% %{NOTSPACE:blueiris_dbid} %{NOTSPACE:blueiris_alert_image} %{INT:ai_processing_time}%{NOTSPACE}\",\n        value:to_string($message.message),\n        only_named_captures: true\n        );\n    set_fields(grokp);\n    set_field(\"Object\",lowercase(to_string($message.Object)));\n    \n    //Set Clip URL\n    set_field(\"alert_clip_url\",concat(\"https://overwatch.eclipsenetwork.org/ui3.htm?rec=\",to_string($message.blueiris_dbid)));\n    set_field(\"alert_clip_url\",concat(to_string($message.alert_clip_url),\"&maximize=1\"));\n\n    //set alert image url\n    set_field(\"alert_image_url\",concat(\"https://overwatch.eclipsenetwork.org/alerts/\",to_string($message.blueiris_alert_image)));\n    set_field(\"alert_image_url\",concat(to_string($message.alert_image_url),\"&fulljpeg\"));\nend\n"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "1458a0c0-84e1-4614-a483-f7dfe1d4cf68",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Parse - Blue Iris - AI Cancelled Events"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Parse - Blue Iris - AI Cancelled Events\"\nWhen\n    $message.action == \"AI\" &&\n    contains(to_string($message.message),\"cancelled\",true)\nthen\n    let grokp = grok(\n        pattern:\"%{DATA} \\\\[%{DATA:justification}] %{INT:ai_processing_time}%{NOTSPACE}\",\n        value:to_string($message.message),\n        only_named_captures: true\n        );\n    set_fields(grokp);\n    set_field(\"ai_processing_time\",to_long($message.ai_processing_time));\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "pipeline_rule",
+        "version": "1"
+      },
+      "id": "5cabe440-d34e-4941-8cbf-71ca81829acc",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "Parse - Blue Iris - Base Message"
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "source": {
+          "@type": "string",
+          "@value": "rule \"Parse - Blue Iris - Base Message\"\nwhen\n    grok (pattern: \"%{TIMESTAMP_ISO8601} %{WORD} %{WORD}: %{NOTSPACE} %{NOTSPACE}:%{INT}\\\\% %{NOTSPACE} %{NOTSPACE}\",\n     value: to_string($message.message)\n     ).matches == false\nthen\n    set_field(\"orig_message\",to_string($message.message));\n    let grokp = grok(\n        pattern:\"%{INT:event_type}%{SPACE}(?<event_timestamp>[0-9]?[0-9]\\\\/[0-9]?[0-9]\\\\/[0-9][0-9][0-9][0-9] [0-9]?[0-9]:[0-9]?[0-9]:[0-9]?[0-9].[0-9]?[0-9]?[0-9] [AaPp][Mm])%{SPACE}%{WORD:camera_short_name}%{SPACE}%{WORD:action}:?%{SPACE}?%{GREEDYDATA:message}?\",\n        value:to_string($message.message),\n        only_named_captures: true\n        );\n        \n    set_fields(grokp);\n    set_field(\"event_type\",to_long($message.event_type));\n    set_field(\"blue_iris\",true);\nend"
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    },
+    {
+      "v": "1",
+      "type": {
+        "name": "stream",
+        "version": "1"
+      },
+      "id": "dd80ce0e-1f17-4f8d-8721-5e9464ad1d12",
+      "data": {
+        "alarm_callbacks": [],
+        "outputs": [],
+        "remove_matches": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "title": {
+          "@type": "string",
+          "@value": "Blue Iris"
+        },
+        "stream_rules": [],
+        "alert_conditions": [],
+        "matching_type": {
+          "@type": "string",
+          "@value": "AND"
+        },
+        "disabled": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "description": {
+          "@type": "string",
+          "@value": ""
+        },
+        "default_stream": {
+          "@type": "boolean",
+          "@value": false
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.6+51f2df8"
+        }
+      ]
+    }
+  ]
+}
