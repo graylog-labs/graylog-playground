@@ -1,7 +1,7 @@
 {
   "v": "1",
   "id": "93851612-3600-49cb-970a-b4beeaa6a93f",
-  "rev": 3,
+  "rev": 4,
   "name": "Graylog Input Starter Pack",
   "summary": "Base common inputs for docker deployment",
   "description": "Commonly used inputs for graylog",
@@ -15,7 +15,7 @@
         "name": "dashboard",
         "version": "2"
       },
-      "id": "3b09334b-6a96-488e-8e1e-af37dcbb06c9",
+      "id": "447712aa-c341-447f-8660-73433b110165",
       "data": {
         "summary": {
           "@type": "string",
@@ -98,22 +98,16 @@
                     {
                       "type": "values",
                       "fields": [
-                        "source"
+                        "application_name"
                       ],
                       "limit": 15
                     }
                   ],
                   "type": "pivot",
-                  "id": "1c33ccc4-00cd-480c-a020-748aa061f4d0",
+                  "id": "334f2d37-8a5e-43e2-916d-b180e552e2d2",
                   "filters": [],
                   "column_groups": [],
-                  "sort": [
-                    {
-                      "type": "series",
-                      "field": "sum(gl2_accounted_message_size)",
-                      "direction": "Descending"
-                    }
-                  ]
+                  "sort": []
                 },
                 {
                   "query": {
@@ -141,16 +135,22 @@
                     {
                       "type": "values",
                       "fields": [
-                        "application_name"
+                        "source"
                       ],
                       "limit": 15
                     }
                   ],
                   "type": "pivot",
-                  "id": "334f2d37-8a5e-43e2-916d-b180e552e2d2",
+                  "id": "1c33ccc4-00cd-480c-a020-748aa061f4d0",
                   "filters": [],
                   "column_groups": [],
-                  "sort": []
+                  "sort": [
+                    {
+                      "type": "series",
+                      "field": "sum(gl2_accounted_message_size)",
+                      "direction": "Descending"
+                    }
+                  ]
                 },
                 {
                   "query": {
@@ -260,7 +260,7 @@
             },
             "widgets": [
               {
-                "id": "2090d699-0596-4635-bef5-0c6914f48bcc",
+                "id": "cf502d49-7bef-4b13-b916-9d3bffabc6e3",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -274,7 +274,7 @@
                 },
                 "streams": [],
                 "config": {
-                  "visualization": "table",
+                  "visualization": "pie",
                   "column_limit": null,
                   "event_annotation": false,
                   "row_limit": 15,
@@ -299,9 +299,7 @@
                   ],
                   "rollup": false,
                   "column_pivots": [],
-                  "visualization_config": {
-                    "pinned_columns": []
-                  },
+                  "visualization_config": null,
                   "formatting_settings": null,
                   "sort": [
                     {
@@ -358,58 +356,7 @@
                 }
               },
               {
-                "id": "4cbc2899-0aa1-4067-9e22-13fbfb79d129",
-                "type": "aggregation",
-                "filter": null,
-                "filters": [],
-                "timerange": {
-                  "from": 1209600,
-                  "type": "relative"
-                },
-                "query": {
-                  "type": "elasticsearch",
-                  "query_string": ""
-                },
-                "streams": [],
-                "config": {
-                  "visualization": "area",
-                  "column_limit": null,
-                  "event_annotation": false,
-                  "row_limit": null,
-                  "row_pivots": [
-                    {
-                      "fields": [
-                        "timestamp"
-                      ],
-                      "type": "time",
-                      "config": {
-                        "interval": {
-                          "type": "timeunit",
-                          "value": 1,
-                          "unit": "days"
-                        }
-                      }
-                    }
-                  ],
-                  "series": [
-                    {
-                      "config": {
-                        "name": null
-                      },
-                      "function": "sum(gl2_accounted_message_size)"
-                    }
-                  ],
-                  "rollup": false,
-                  "column_pivots": [],
-                  "visualization_config": {
-                    "interpolation": "linear"
-                  },
-                  "formatting_settings": null,
-                  "sort": []
-                }
-              },
-              {
-                "id": "cf502d49-7bef-4b13-b916-9d3bffabc6e3",
+                "id": "2090d699-0596-4635-bef5-0c6914f48bcc",
                 "type": "aggregation",
                 "filter": null,
                 "filters": [],
@@ -459,6 +406,58 @@
                       "direction": "Descending"
                     }
                   ]
+                }
+              },
+              {
+                "id": "4cbc2899-0aa1-4067-9e22-13fbfb79d129",
+                "type": "aggregation",
+                "filter": null,
+                "filters": [],
+                "timerange": {
+                  "from": 1209600,
+                  "type": "relative"
+                },
+                "query": {
+                  "type": "elasticsearch",
+                  "query_string": ""
+                },
+                "streams": [],
+                "config": {
+                  "visualization": "area",
+                  "column_limit": null,
+                  "event_annotation": false,
+                  "row_limit": null,
+                  "row_pivots": [
+                    {
+                      "fields": [
+                        "timestamp"
+                      ],
+                      "type": "time",
+                      "config": {
+                        "interval": {
+                          "type": "timeunit",
+                          "value": 1,
+                          "unit": "days"
+                        }
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "config": {
+                        "name": null
+                      },
+                      "function": "sum(gl2_accounted_message_size)"
+                    }
+                  ],
+                  "rollup": false,
+                  "column_pivots": [],
+                  "visualization_config": {
+                    "interpolation": "linear",
+                    "axis_type": "linear"
+                  },
+                  "formatting_settings": null,
+                  "sort": []
                 }
               },
               {
@@ -525,35 +524,35 @@
               ]
             },
             "positions": {
-              "2090d699-0596-4635-bef5-0c6914f48bcc": {
-                "col": 1,
-                "row": 2,
-                "height": 4,
-                "width": 3
-              },
-              "4cbc2899-0aa1-4067-9e22-13fbfb79d129": {
-                "col": 5,
-                "row": 6,
-                "height": 4,
-                "width": 5
-              },
               "cf502d49-7bef-4b13-b916-9d3bffabc6e3": {
                 "col": 4,
-                "row": 2,
-                "height": 4,
-                "width": 3
-              },
-              "1670c774-0989-49f5-a768-6c276eb54624": {
-                "col": 7,
-                "row": 2,
+                "row": 1,
                 "height": 4,
                 "width": 3
               },
               "afa07fc0-80b0-4715-96c1-76282d3f9c28": {
                 "col": 1,
-                "row": 6,
+                "row": 5,
                 "height": 4,
                 "width": 4
+              },
+              "2090d699-0596-4635-bef5-0c6914f48bcc": {
+                "col": 1,
+                "row": 1,
+                "height": 4,
+                "width": 3
+              },
+              "4cbc2899-0aa1-4067-9e22-13fbfb79d129": {
+                "col": 5,
+                "row": 5,
+                "height": 4,
+                "width": 5
+              },
+              "1670c774-0989-49f5-a768-6c276eb54624": {
+                "col": 7,
+                "row": 1,
+                "height": 4,
+                "width": 3
               }
             },
             "formatting": {
@@ -579,7 +578,7 @@
       "constraints": [
         {
           "type": "server-version",
-          "version": ">=5.0.6+51f2df8"
+          "version": ">=5.1.0-rc.1+9ad90f6"
         }
       ]
     },
