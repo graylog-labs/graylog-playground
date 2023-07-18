@@ -1,0 +1,14 @@
+[
+    {
+        "host": "http://10.100.100.58:9000",
+        "userpass": "admin:graylog",
+        "license": "a_big_license_key",
+        "comment": "graylog operations 20gb"
+    },
+    {
+        "host": "http://10.100.100.58:9000",
+        "token": "1imej4thkulbeni6u8ok9h06pt66msc5pvu9kibjhgkm07tsgt1d",
+        "license": "a_big_license_key",
+        "comment": "graylog security 20gb"
+    }
+]
