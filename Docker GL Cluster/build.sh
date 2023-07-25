@@ -12,12 +12,13 @@ apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin o
 sudo sysctl -w vm.max_map_count=262144
 
 #Mongo
-docker compose -f docker-compose-glcluster.yml pull
-docker compose -f docker-compose-glcluster.yml create
-sudo docker compose -f docker-compose-glcluster.yml start mongo.one.db
-sudo docker compose -f docker-compose-glcluster.yml start mongo.two.db
-sudo docker compose -f docker-compose-glcluster.yml start mongo.three.db
+docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env pull
+docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env create
+sudo docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env start mongo.one.db
+sudo docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env start mongo.two.db
+sudo docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env start mongo.three.db
 docker exec -it mongo.one.db mongosh --eval "rs.initiate({_id:'rs0', members: [{_id:0, host: 'mongo.one.db'},{_id:1, host: 'mongo.two.db'},{_id:2, host: 'mongo.three.db'}]})"
 
 #OpenSearch and Graylog
-sudo docker compose -f docker-compose-glcluster.yml up -d
+sudo docker compose -f docker-compose-glcluster.yml --env-file docker-compose-glcluster.env up -d
+
