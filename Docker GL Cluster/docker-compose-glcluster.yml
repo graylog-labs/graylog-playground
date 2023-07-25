@@ -91,7 +91,7 @@ services:
     environment:
       cluster.name: "graylog"
       node.name: "os.one"
-      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      OPENSEARCH_JAVA_OPTS: "-Xms${OpenS_RAM}g -Xmx${OpenS_RAM}g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
       discovery.seed_hosts: "os.one,os.two,os.three"
       cluster.initial_master_nodes: "os.one,os.two,os.three"
@@ -120,7 +120,7 @@ services:
     environment:
       cluster.name: "graylog"
       node.name: "os.two"
-      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      OPENSEARCH_JAVA_OPTS: "-Xms${OpenS_RAM}g -Xmx${OpenS_RAM}g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
       discovery.seed_hosts: "os.one,os.two,os.three"
       cluster.initial_master_nodes: "os.one,os.two,os.three"
@@ -149,7 +149,7 @@ services:
     environment:
       cluster.name: "graylog"
       node.name: "os.three"
-      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      OPENSEARCH_JAVA_OPTS: "-Xms${OpenS_RAM}g -Xmx${OpenS_RAM}g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
       discovery.seed_hosts: "os.one,os.two,os.three"
       cluster.initial_master_nodes: "os.one,os.two,os.three"
@@ -182,22 +182,26 @@ services:
       GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
-      GRAYLOG_SERVER_JAVA_OPTS: "-Xms1g -Xmx1g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+      GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GL_RAM}g -Xmx${GL_RAM}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
     networks:
       common.network:
     ports:
-    - "5044:5044/tcp"   # Beats
-    - "1500:1500/udp"   # Raw UDP
-    - "1501:1501/tcp"   # Raw TCP
-    - "12201:12201/tcp" # GELF TCP
-    - "12201:12201/udp" # GELF UDP
+    - "5045:5044/tcp"   # Beats
+    - "1501:1500/udp"   # Raw UDP
+    - "1502:1501/tcp"   # Raw TCP
+    - "12202:12201/tcp" # GELF TCP
+    - "12202:12201/udp" # GELF UDP
     - "9000:9000/tcp"   # Server http API
-    - "443:443/tcp"     # Server https API
     restart: always
     volumes:
       - graylog.one.data.vol:/usr/share/graylog/data/data
       - graylog.one.journal.vol:/usr/share/graylog/data/journal
       - graylog.one.config.vol:/usr/share/graylog/data/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graylog.entrypoints=web"
+      - "traefik.http.services.graylog.loadbalancer.server.port=9000"
+      - "traefik.http.routers.graylog.rule=Host(`test.${DOMAIN_NAME}`)"
     
   graylog.two:
     container_name: gl.two
@@ -223,19 +227,60 @@ services:
       GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
-      GRAYLOG_SERVER_JAVA_OPTS: "-Xms1g -Xmx1g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+      GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GL_RAM}g -Xmx${GL_RAM}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
     networks:
       common.network:
     ports:
-    - "5045:5044/tcp"   # Beats
-    - "1501:1500/udp"   # Raw UDP
-    - "1502:1501/tcp"   # Raw TCP
-    - "12202:12201/tcp" # GELF TCP
-    - "12202:12201/udp" # GELF UDP
+    - "5046:5044/tcp"   # Beats
+    - "1502:1500/udp"   # Raw UDP
+    - "1503:1501/tcp"   # Raw TCP
+    - "12203:12201/tcp" # GELF TCP
+    - "12203:12201/udp" # GELF UDP
     - "9001:9000/tcp"   # Server http API
-    - "444:443/tcp"     # Server https API
     restart: always
     volumes:
       - graylog.two.data.vol:/usr/share/graylog/data/data
       - graylog.two.journal.vol:/usr/share/graylog/data/journal
       - graylog.two.config.vol:/usr/share/graylog/data/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.graylog.entrypoints=web"
+      - "traefik.http.services.graylog.loadbalancer.server.port=9000"
+      - "traefik.http.routers.graylog.rule=Host(`test.${DOMAIN_NAME}`)"
+
+  traefik:
+    image: "traefik:latest"
+    container_name: "traefik"
+    command:
+      - --global.checkNewVersion=true
+      - --providers.docker=true
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --entryPoints.traefik.address=:8080
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=common.network
+      - --providers.docker.swarmMode=false
+    networks:
+      common.network:    
+    ports:
+      - "80:80" 
+      - "8080:8080"
+      - "5044:5044/tcp"   # Beats
+      - "1500:1500/udp"   # Raw UDP
+      - "1500:1501/tcp"   # Raw TCP
+      - "12201:12201/tcp" # GELF TCP
+      - "12201:12201/udp" # GELF UDP      
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"  
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+  
+  whoami:
+    image: "traefik/whoami"
+    container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
