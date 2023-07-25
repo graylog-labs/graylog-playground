@@ -36,8 +36,6 @@ services:
     image: mongo:6
     networks:
       common.network:
-    ports:
-      - 20000:27017
     volumes:
       - mongo.one.vol:/data/db
     restart: always
@@ -48,8 +46,6 @@ services:
     image: mongo:6
     networks:
       common.network:
-    ports:
-      - 20001:27017
     depends_on:
       - mongo.one.db
     volumes:
@@ -62,8 +58,6 @@ services:
     image: mongo:6
     networks:
       common.network:
-    ports:
-      - 20002:27017
     depends_on:
       - mongo.one.db
     volumes:
@@ -83,8 +77,6 @@ services:
         hard: 65536
     networks:
       common.network:
-    ports:
-    - "9200:9200/tcp"
     restart: always
     volumes:
       - opensearch.one.vol:/usr/share/opensearch/data
@@ -112,8 +104,6 @@ services:
         hard: 65536
     networks:
       common.network:
-    ports:
-    - "9201:9200/tcp"
     restart: always
     volumes:
       - opensearch.two.vol:/usr/share/opensearch/data
@@ -183,15 +173,14 @@ services:
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
       GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GL_RAM}g -Xmx${GL_RAM}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://graylog.${DOMAIN_NAME}/"
     networks:
       common.network:
     ports:
-    - "5045:5044/tcp"   # Beats
-    - "1501:1500/udp"   # Raw UDP
-    - "1502:1501/tcp"   # Raw TCP
-    - "12202:12201/tcp" # GELF TCP
-    - "12202:12201/udp" # GELF UDP
-    - "9000:9000/tcp"   # Server http API
+    - "5044:5044/tcp"   # Beats
+    - "1500:1500/tcp"   # Raw TCP
+    - "12201:12201/tcp" # GELF TCP
+    - "12201:12201/udp" # GELF UDP
     restart: always
     volumes:
       - graylog.one.data.vol:/usr/share/graylog/data/data
@@ -201,7 +190,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.graylog.entrypoints=web"
       - "traefik.http.services.graylog.loadbalancer.server.port=9000"
-      - "traefik.http.routers.graylog.rule=Host(`test.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.graylog.rule=Host(`graylog.${DOMAIN_NAME}`)"
     
   graylog.two:
     container_name: gl.two
@@ -228,15 +217,9 @@ services:
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
       GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GL_RAM}g -Xmx${GL_RAM}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://graylog.${DOMAIN_NAME}/"      
     networks:
       common.network:
-    ports:
-    - "5046:5044/tcp"   # Beats
-    - "1502:1500/udp"   # Raw UDP
-    - "1503:1501/tcp"   # Raw TCP
-    - "12203:12201/tcp" # GELF TCP
-    - "12203:12201/udp" # GELF UDP
-    - "9001:9000/tcp"   # Server http API
     restart: always
     volumes:
       - graylog.two.data.vol:/usr/share/graylog/data/data
@@ -246,7 +229,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.graylog.entrypoints=web"
       - "traefik.http.services.graylog.loadbalancer.server.port=9000"
-      - "traefik.http.routers.graylog.rule=Host(`test.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.graylog.rule=Host(`graylog.${DOMAIN_NAME}`)"
 
   traefik:
     image: "traefik:latest"
@@ -265,12 +248,7 @@ services:
       common.network:    
     ports:
       - "80:80" 
-      - "8080:8080"
-      - "5044:5044/tcp"   # Beats
-      - "1500:1500/udp"   # Raw UDP
-      - "1500:1501/tcp"   # Raw TCP
-      - "12201:12201/tcp" # GELF TCP
-      - "12201:12201/udp" # GELF UDP      
+      - "8080:8080"   
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"  
     labels:
