@@ -1,8 +1,9 @@
 #Cleanup and get docker installed
+source /etc/os-release
 sudo apt-get remove -y docker docker-engine docker.io containerd runc 
-apt-get install -y ca-certificates curl gnupg lsb-release wget
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo apt-get install -y ca-certificates curl gnupg lsb-release wget
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/$ID/gpg | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
 echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin openjdk-11-jre-headless jq
@@ -20,4 +21,3 @@ docker exec -it mongo.one.db mongosh --eval "rs.initiate({_id:'rs0', members: [{
 
 #OpenSearch and Graylog
 sudo docker compose -f docker-compose-glcluster.yml up -d
-
