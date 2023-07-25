@@ -1,0 +1,241 @@
+version: '3.8'
+
+networks:
+  common.network:
+    driver: bridge
+
+volumes:
+  mongo.one.vol:
+    name: "mongo.one.vol"
+  mongo.two.vol:
+    name: "mongo.two.vol"
+  mongo.three.vol:
+    name: "mongo.three.vol"
+  opensearch.one.vol:
+    name: "opensearch.one.vol"
+  opensearch.two.vol:
+    name: "opensearch.two.vol"
+  opensearch.three.vol:
+    name: "opensearch.three.vol"
+  graylog.one.data.vol:
+    name: "graylog.one.data.vol"
+  graylog.one.journal.vol:
+    name: "graylog.one.journal.vol"
+  graylog.one.config.vol:
+    name: "graylog.one.config.vol"
+  graylog.two.data.vol:
+    name: "graylog.two.data.vol"
+  graylog.two.journal.vol:
+    name: "graylog.two.journal.vol"
+  graylog.two.config.vol:
+    name: "graylog.two.config.vol"
+
+services:
+  mongo.one.db:
+    container_name: mongo.one.db
+    image: mongo:6
+    networks:
+      common.network:
+    ports:
+      - 20000:27017
+    volumes:
+      - mongo.one.vol:/data/db
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+
+  mongo.two.db:
+    container_name: mongo.two.db
+    image: mongo:6
+    networks:
+      common.network:
+    ports:
+      - 20001:27017
+    depends_on:
+      - mongo.one.db
+    volumes:
+      - mongo.two.vol:/data/db
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+
+  mongo.three.db:
+    container_name: mongo.three.db
+    image: mongo:6
+    networks:
+      common.network:
+    ports:
+      - 20002:27017
+    depends_on:
+      - mongo.one.db
+    volumes:
+      - mongo.three.vol:/data/db
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+
+  opensearch.one:
+    container_name: os.one
+    image: "opensearchproject/opensearch:2"
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      common.network:
+    ports:
+    - "9200:9200/tcp"
+    restart: always
+    volumes:
+      - opensearch.one.vol:/usr/share/opensearch/data
+    environment:
+      cluster.name: "graylog"
+      node.name: "os.one"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      bootstrap.memory_lock: "true"
+      discovery.seed_hosts: "os.one,os.two,os.three"
+      cluster.initial_master_nodes: "os.one,os.two,os.three"
+      http.host: "0.0.0.0"
+      action.auto_create_index: "false"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+
+  opensearch.two:
+    container_name: os.two
+    image: "opensearchproject/opensearch:2"
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      common.network:
+    ports:
+    - "9201:9200/tcp"
+    restart: always
+    volumes:
+      - opensearch.two.vol:/usr/share/opensearch/data
+    environment:
+      cluster.name: "graylog"
+      node.name: "os.two"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      bootstrap.memory_lock: "true"
+      discovery.seed_hosts: "os.one,os.two,os.three"
+      cluster.initial_master_nodes: "os.one,os.two,os.three"
+      http.host: "0.0.0.0"
+      action.auto_create_index: "false"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+
+  opensearch.three:
+    container_name: os.three
+    image: "opensearchproject/opensearch:2"
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      common.network:
+    ports:
+    - "9202:9200/tcp"
+    restart: always
+    volumes:
+      - opensearch.three.vol:/usr/share/opensearch/data
+    environment:
+      cluster.name: "graylog"
+      node.name: "os.three"
+      OPENSEARCH_JAVA_OPTS: "-Xms1g -Xmx1g -Dlog4j2.formatMsgNoLookups=true"
+      bootstrap.memory_lock: "true"
+      discovery.seed_hosts: "os.one,os.two,os.three"
+      cluster.initial_master_nodes: "os.one,os.two,os.three"
+      http.host: "0.0.0.0"
+      action.auto_create_index: "false"
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+
+  graylog.one:
+    container_name: gl.one
+    image: "graylog/graylog-enterprise:5.1.3-1"
+    depends_on:
+      opensearch.one:
+        condition: "service_started"
+      opensearch.two:
+        condition: "service_started"
+      opensearch.three:
+        condition: "service_started"
+      mongo.one.db:
+        condition: "service_started"
+      mongo.two.db:
+        condition: "service_started"
+      mongo.three.db:
+        condition: "service_started"
+    entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
+    environment:
+      GRAYLOG_IS_LEADER: "true"
+      GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 10gb
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
+      GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
+      GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
+      GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
+      GRAYLOG_SERVER_JAVA_OPTS: "-Xms1g -Xmx1g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+    networks:
+      common.network:
+    ports:
+    - "5044:5044/tcp"   # Beats
+    - "1500:1500/udp"   # Raw UDP
+    - "1501:1501/tcp"   # Raw TCP
+    - "12201:12201/tcp" # GELF TCP
+    - "12201:12201/udp" # GELF UDP
+    - "9000:9000/tcp"   # Server http API
+    - "443:443/tcp"     # Server https API
+    restart: always
+    volumes:
+      - graylog.one.data.vol:/usr/share/graylog/data/data
+      - graylog.one.journal.vol:/usr/share/graylog/data/journal
+      - graylog.one.config.vol:/usr/share/graylog/data/config
+    
+  graylog.two:
+    container_name: gl.two
+    image: "graylog/graylog-enterprise:5.1.3-1"
+    depends_on:
+      opensearch.one:
+        condition: "service_started"
+      opensearch.two:
+        condition: "service_started"
+      opensearch.three:
+        condition: "service_started"
+      mongo.one.db:
+        condition: "service_started"
+      mongo.two.db:
+        condition: "service_started"
+      mongo.three.db:
+        condition: "service_started"
+    entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
+    environment:
+      GRAYLOG_IS_LEADER: "false"
+      GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 10gb
+      GRAYLOG_PASSWORD_SECRET: somepasswordpepper
+      GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
+      GRAYLOG_ELASTICSEARCH_HOSTS: "http://os.one:9200,http://os.two:9200,http://os.three:9200"
+      GRAYLOG_MONGODB_URI: "mongodb://mongo.one.db:27017,mongo.two.db:27017,mongo.three.db:27017/graylog?replicaSet=rs0"
+      GRAYLOG_SERVER_JAVA_OPTS: "-Xms1g -Xmx1g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
+    networks:
+      common.network:
+    ports:
+    - "5045:5044/tcp"   # Beats
+    - "1501:1500/udp"   # Raw UDP
+    - "1502:1501/tcp"   # Raw TCP
+    - "12202:12201/tcp" # GELF TCP
+    - "12202:12201/udp" # GELF UDP
+    - "9001:9000/tcp"   # Server http API
+    - "444:443/tcp"     # Server https API
+    restart: always
+    volumes:
+      - graylog.two.data.vol:/usr/share/graylog/data/data
+      - graylog.two.journal.vol:/usr/share/graylog/data/journal
+      - graylog.two.config.vol:/usr/share/graylog/data/config
