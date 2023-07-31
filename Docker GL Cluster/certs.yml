@@ -1,0 +1,5 @@
+tls:
+  certificates:
+    # first certificate
+    - certFile: /certs/cert.pem
+      keyFile: /certs/privkey.pem
