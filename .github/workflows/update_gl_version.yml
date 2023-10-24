@@ -14,10 +14,10 @@ jobs:
       - name: "Check Current Version and update if needed" 
         shell: "bash"
         run: |
-          lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | tail -n 1)
+          lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | awk '!/-rc/' | tail -n 1)
           dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' autogl/docker-compose.yml | tr -d '"' | tr -d " ")
           if [[ "$lgl" != "$dcv" ]]; then echo "update plz"; else echo "updated already"; exit 0; fi
-          lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | tail -n 1)
+          lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | awk '!/-rc/' | tail -n 1)
           sed -i "s+enterprise\:$dcv+enterprise\:$lgl+g" autogl/docker-compose.yml
           git config user.name github-actions
           git config user.email github-actions@github.com
