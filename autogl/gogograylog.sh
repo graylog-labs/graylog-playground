@@ -15,6 +15,17 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+if [[ "$1" == "--latest" ]]; then
+    echo -e "${URED}You've opted to use the latest graylog release.${NC}\n\n You sure? [y/n]"
+    read CHOICE
+    if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
+        echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
+        exit 1
+    else
+        GLLATEST=true
+    fi
+fi
+
 function isPresent { command -v "$1" &> /dev/null && echo 1; }
 source /etc/os-release #Get OS Details
 
@@ -176,6 +187,13 @@ wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/auto
 if [ ! -f ~/docker-compose.yml ]; then
     echo -e "${URED}Failed to grab docker compose file from GIT... Check your internet connection and try again${NC}"
     exit 1337
+fi
+
+#Latest GL Version
+if [ $GLLATEST ]; then
+    lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | tail -n 1)
+    dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' ~/docker-compose.yml | tr -d '"' | tr -d " ")
+    sed -i "s+enterprise\:$dcv+enterprise\:$lgl+g" ~/docker-compose.yml
 fi
 
 function addFirewallRule {
