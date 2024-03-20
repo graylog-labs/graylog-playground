@@ -18,7 +18,7 @@ fi
 if [[ "$1" == "--latest" ]]; then
     echo -e "${URED}You've opted to use the latest graylog release.${NC}\n\n You sure? [y/n]"
     read CHOICE
-    if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
+      if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
         echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
         exit 1
     else
@@ -152,7 +152,7 @@ if [ "$APT_IS_PRESENT" ]; then
 	export DEBIAN_FRONTEND=noninteractive
     if [ "$DOCKER_IS_INSTALLED" ]; then
         echo -e "${URED}Removing current docker install${NC}"
-        sudo apt-get remove -y docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
+        apt-get remove -y docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
     fi
     updateSystem
 
