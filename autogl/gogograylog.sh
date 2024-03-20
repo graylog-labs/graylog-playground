@@ -156,7 +156,7 @@ if [ "$APT_IS_PRESENT" ]; then
     fi
     updateSystem
 
-    apt-get install -y ca-certificates curl gnupg lsb-release wget &>> "$LOG_FILE"
+    apt-get install -y ca-certificates curl gnupg lsb-release &>> "$LOG_FILE"
     echo -e "${UGREEN}Installing Docker${NC}"
     mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
     curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -174,7 +174,7 @@ elif [ "$YUM_IS_PRESENT" ]; then
     yum install -y yum-utils &>> "$LOG_FILE"
     ID=centos
     yum-config-manager --add-repo https://download.docker.com/linux/$ID/docker-ce.repo &>> "$LOG_FILE"
-    yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin wget jq &>> "$LOG_FILE"
+    yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
 
 else
 	echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
@@ -183,7 +183,8 @@ else
 	exit
 fi
 
-wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
 if [ ! -f ~/docker-compose.yml ]; then
     echo -e "${URED}Failed to grab docker compose file from GIT... Check your internet connection and try again${NC}"
     exit 1337
@@ -292,7 +293,8 @@ while ! curl -s -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes 
 done
 
 #Add inputs via CP
-wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
+#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
 for entry in ~/gl_*
 do
   echo -e "\n\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
