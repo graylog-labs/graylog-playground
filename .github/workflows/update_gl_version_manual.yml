@@ -1,4 +1,4 @@
-name: "Update Graylog Version"
+name: "Update Graylog Version - manaul"
 on:
   workflow_dispatch:
 
