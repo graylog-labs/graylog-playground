@@ -41,8 +41,10 @@ log() {
     # Construct the log message - I hate syslog priorities, so you get INFO severity for all messages
     local logMessage="<134>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
 
+    # Create log dir if does not exist already
+    [ ! -d /var/log/deploy-graylog ] && mkdir /var/log/deploy-graylog
+
     # Append the log message to the file
-    mkdir /var/log/deploy-graylog
     echo "${logMessage}" >> /var/log/deploy-graylog/deploy-graylog.log
 }
 
