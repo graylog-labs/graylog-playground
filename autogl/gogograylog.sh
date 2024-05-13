@@ -42,7 +42,8 @@ log() {
     local logMessage="<134>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
 
     # Append the log message to the file
-    echo "${logMessage}" >> deploy-graylog.log
+    mkdir /var/log/deploy-graylog
+    echo "${logMessage}" >> /var/log/deploy-graylog/deploy-graylog.log
 }
 
 # Display info to user via stdout (distinct from log file output)
@@ -120,8 +121,8 @@ done
 
 
 
-if [ "$EUID" -ne 0 ]
-    inform "CHECK" "Permissions: Not running as Root" "WARN"
+if [ "$EUID" -ne 0 ]; then
+  inform "CHECK" "Permissions: Not running as Root" "WARN"
   exit
 fi
 
