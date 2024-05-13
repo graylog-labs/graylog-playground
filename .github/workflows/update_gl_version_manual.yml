@@ -1,7 +1,8 @@
 name: "Update Graylog Version - manaul"
 on:
   workflow_dispatch:
-
+permissions:
+  contents: write
 jobs:
   Update-Docker-Compose-File:
     runs-on: "ubuntu-latest"
