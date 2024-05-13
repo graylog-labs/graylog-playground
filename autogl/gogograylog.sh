@@ -22,6 +22,25 @@ NOLOGGING=0
 GLLATEST=0
 SKIPCHECKS=0
 
+# External system vars:
+LOG_FILE="/var/log/deploy-graylog/deploy-graylog.log"
+TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024;}' < /proc/meminfo)
+MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
+HALF_MEM=$((TOTAL_MEM/2))
+Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
+ARCH=$(uname -m)
+UFW_IS_PRESENT="$(isPresent ufw)"
+FIREWALLCMD_IS_PRESENT="$(isPresent firewall-cmd)"
+NFT_IS_PRESENT="$(isPresent nft)"
+SELINUX_IS_INSTALLED="$(isPresent setsebool)"
+DOCKER_IS_INSTALLED="$(isPresent docker)"
+APT_IS_PRESENT="$(isPresent apt-get)"
+YUM_IS_PRESENT="$(isPresent yum)"
+JQ_IS_PRESENT="$(isPresent jq)"
+IP_IS_PRESENT="$(isPresent ip)"
+CURL_IS_PRESENT="$(isPresent curl)"
+
+
 # ======================== #
 # Logging / Meta Functions #
 # ======================== #
@@ -31,19 +50,34 @@ SKIPCHECKS=0
 # "$state" should contain the status of the action, must be one of those in the $state array defined in the inform() fxn
 
 
+# Create new log file. If file exists, append its creation date to end and delete original.
+if [ -e "$LOG_FILE" ]; then
+    cp "$LOG_FILE" "$LOG_FILE.$(date -r "$LOG_FILE" "+%Y-%m-%d_%H-%M-%S")"
+    rm "$LOG_FILE"
+fi
+date > "$LOG_FILE"
+
+
 # Display info to user via stdout (also sends to logfile):
 inform() {
     local activity="$1"
     local message="$2"
     local state="$3"
+    local prival
     local color=$NC
     local dots
 
-    # Determine the color based on the state
+    # Determine the color & syslog priority value based on the state:
     case "$state" in
-        OK|PASS) color=$UGREEN;;
-        WARN) color=$UYELLOW;;
-        ERROR) color=$URED;;
+        OK|PASS) color=$UGREEN
+        prival="134"
+        ;;
+        WARN) color=$UYELLOW
+        prival="132"
+        ;;
+        ERROR) color=$URED
+        prival="131"
+        ;;
     esac
 
     # Calculate the number of dots
@@ -61,7 +95,7 @@ inform() {
         log "$activity" "$message" "$state"
     fi
 
-    log "$1" "$2" "$3"
+    log "$1" "$2" "$3" "$prival"
 }
 
 
@@ -78,17 +112,15 @@ log() {
     # Note: The '+%Y-%m-%dT%H:%M:%SZ' format provides UTC time. Adjust if you need local time.
     local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
-    # If no Syslog prival set, default to "local0" facility and "INFO" severity (aka 134):
-    [ -z $prival ] && prival="134"
-
-    # Construct the log message - I hate syslog priorities, so you get INFO severity for all messages
+    # Construct the log message using an appropriate Syslog priority value
+    # so we don't have to summon Satan every time we deploy Graylog :)
     local logMessage="<$prival>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
 
     # Create log dir if does not exist already
     [ ! -d /var/log/deploy-graylog ] && mkdir /var/log/deploy-graylog
-
+    
     # Append the log message to the file
-    echo "${logMessage}" >> /var/log/deploy-graylog/deploy-graylog.log
+    echo "${logMessage}" >> "$LOG_FILE"
 }
 
 
@@ -125,7 +157,7 @@ done
 
 # Exit if running as non-root user:
 if [ "$EUID" -ne 0 ]; then
-  inform "CHECK" "Not running as root, exiting..." "ERROR"
+  inform "CHECK" "Not running as root, exiting..." "ERROR" 
   exit 1
 fi
 
@@ -137,30 +169,11 @@ else
     exit 1
 fi
 
-TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024;}' < /proc/meminfo)
-MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
-HALF_MEM=$((TOTAL_MEM/2))
-Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
-ARCH=$(uname -m)
-UFW_IS_PRESENT="$(isPresent ufw)"
-FIREWALLCMD_IS_PRESENT="$(isPresent firewall-cmd)"
-NFT_IS_PRESENT="$(isPresent nft)"
-SELINUX_IS_INSTALLED="$(isPresent setsebool)"
-DOCKER_IS_INSTALLED="$(isPresent docker)"
-APT_IS_PRESENT="$(isPresent apt-get)"
-YUM_IS_PRESENT="$(isPresent yum)"
-JQ_IS_PRESENT="$(isPresent jq)"
-IP_IS_PRESENT="$(isPresent ip)"
-CURL_IS_PRESENT="$(isPresent curl)"
 
 #Test for WSL
 if grep -qi microsoft /proc/version; then
   WSL=1
 fi
-
-LOG_FILE="$HOME/gldockerinstall-$(date +%Y%m%d-%H%M%S).log"
-INSTALL_SUMMARY=~/gldockerinstall.log
-date > "$LOG_FILE"
 
 if [ "$IP_IS_PRESENT" ]; then
 	read -r _{,} GATEWAY_IP _ _ _ INTERNAL_IP _ < <(ip r g 1.0.0.0)
