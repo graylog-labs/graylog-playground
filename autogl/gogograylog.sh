@@ -29,16 +29,6 @@ MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
 HALF_MEM=$((TOTAL_MEM/2))
 Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
 ARCH=$(uname -m)
-UFW_IS_PRESENT="$(isPresent ufw)"
-FIREWALLCMD_IS_PRESENT="$(isPresent firewall-cmd)"
-NFT_IS_PRESENT="$(isPresent nft)"
-SELINUX_IS_INSTALLED="$(isPresent setsebool)"
-DOCKER_IS_INSTALLED="$(isPresent docker)"
-APT_IS_PRESENT="$(isPresent apt-get)"
-YUM_IS_PRESENT="$(isPresent yum)"
-JQ_IS_PRESENT="$(isPresent jq)"
-IP_IS_PRESENT="$(isPresent ip)"
-CURL_IS_PRESENT="$(isPresent curl)"
 
 
 # ======================== #
@@ -175,13 +165,13 @@ if grep -qi microsoft /proc/version; then
   WSL=1
 fi
 
-if [ "$IP_IS_PRESENT" ]; then
+if [ $(which ip) ]; then
 	read -r _{,} GATEWAY_IP _ _ _ INTERNAL_IP _ < <(ip r g 1.0.0.0)
 else
 	INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
 fi
 
-if [ "$CURL_IS_PRESENT" ]; then
+if [ $(which curl) ]; then
 	EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
 else
 	EXTERNAL_IP=$(wget -qO- https://ipecho.net/plain --no-check-certificate 2> /dev/null)
@@ -215,15 +205,15 @@ fi
 
 function updateSystem {
 	echo -e "${UGREEN}Updating System...${NC}"
-	if [ "$APT_IS_PRESENT" ]; then
+	if [ $(which apt) ]; then
 		apt-get update &>> "$LOG_FILE"
 		apt-get upgrade -y &>> "$LOG_FILE"
-	elif [ "$YUM_IS_PRESENT" ]; then
+	elif [ $(which yum) ]; then
 		yum update -y &>> "$LOG_FILE"
 	fi
 }
 
-if [ "$DOCKER_IS_INSTALLED" ]; then
+if [ $(which docker) ]; then
     echo -e "${UYELLOW}Warning!${NC} Docker is currently installed. \nThis Script will ${URED}REMOVE${NC} current docker installs and replace with the latest version. \nDo you want to continue? \n[Y/N]"
     read CHOICE
     if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
@@ -252,26 +242,24 @@ do
 done
 
 #Firewall Cleanup
-if [ "$UFW_IS_PRESENT" ]; then
+if [ $(which ufw) ]; then
 	UFWSTATUS=$(ufw status)
-	if [[ "$UFWSTATUS" =~ "inactive" ]]; then unset UFW_IS_PRESENT; fi #No rules set
 fi
 
-if [ "$NFT_IS_PRESENT" ]; then
+if [ $(which nft) ]; then
     NFTSTATUS=$(nft list ruleset)
-    if [ -z "$NFTSTATUS" ]; then unset NFT_IS_PRESENT; fi #No rules set
-    if [[ $NFTSTATUS != *"INPUT"* ]]; then unset NFT_IS_PRESENT; fi #No Ingress rules set
 fi
 
 FIREWALL=none
-if [ "$UFW_IS_PRESENT" ]; then FIREWALL=ufw;
-elif [ "$FIREWALLCMD_IS_PRESENT" ]; then FIREWALL=firewalld;
-elif [ "$IPTABLES_IS_PRESENT" ]; then FIREWALL=iptables; 
-elif [ "$NFT_IS_PRESENT" ]; then FIREWALL=nft; fi;
+if [ $(which ufw) ]; then FIREWALL=ufw;
+elif [ $(which firewall-cmd) ]; then FIREWALL=firewalld;
+elif [ $(which iptables) ]; then FIREWALL=iptables; 
+elif [ $(which nft) ]; then FIREWALL=nft;
+fi
 
-if [ "$APT_IS_PRESENT" ]; then
+if [ $(which apt) ]; then
 	export DEBIAN_FRONTEND=noninteractive
-    if [ "$DOCKER_IS_INSTALLED" ]; then
+    if [ $(which docker) ]; then
         echo -e "${URED}Removing current docker install${NC}"
         apt-get remove -y docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
     fi
@@ -285,8 +273,8 @@ if [ "$APT_IS_PRESENT" ]; then
     updateSystem
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin openjdk-11-jre-headless jq &>> "$LOG_FILE"
  
-elif [ "$YUM_IS_PRESENT" ]; then
-	    if [ "$DOCKER_IS_INSTALLED" ]; then
+elif [ $(which yum) ]; then
+	    if [ $(which docker) ]; then
         echo -e "${URED}Removing current docker install${NC}"
         yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc &>> "$LOG_FILE"
     fi
@@ -319,7 +307,7 @@ if [ $GLLATEST ]; then
 fi
 
 function addFirewallRule {
-	if [ "$YUM_IS_PRESENT" ]; then
+	if [ $(which yum) ]; then
         IPTABLESLOC="/etc/sysconfig/iptables"
     else
         IPTABLESLOC="/etc/iptables/rules.v4"
@@ -360,7 +348,7 @@ sed -i "s+941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6+$GLSH
 unset GLSHA256
 
 #Because RH
-if [ "$YUM_IS_PRESENT" ]; then
+if [ $(which yum) ]; then
     systemctl enable docker.service &>> "$LOG_FILE"
     systemctl restart docker &>> "$LOG_FILE"
 fi
