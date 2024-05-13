@@ -10,12 +10,12 @@ clear
 # =========================== #
 
 # Formatting vars:
-NC='\033[0m'
-URED='\033[4;31m'
-UGREEN='\033[4;32m'
-UYELLOW='\033[4;33m'
-BGREEN='\033[1;32m' 
-IBLACK='\033[0;100m'
+NC='\033[0m' # default color/format
+URED='\033[4;31m' # underlined red
+UGREEN='\033[4;32m' # underlined green
+UYELLOW='\033[4;33m' # underlined yellow
+BGREEN='\033[1;32m' # bold green
+DGRAYBG='\033[0;100m' # dark gray background
 
 # Flag vars:
 NOLOGGING=0
@@ -26,29 +26,12 @@ SKIPCHECKS=0
 # Logging / Meta Functions #
 # ======================== #
 
-# Logging function - yeah.. I went there.
-# We're a logging company. 
-log() {
-    # Capture parameters
-    local activity="$1"
-    local message="$2"
-    local state="$3"
+# "$activity" should contain the type of action that is occurring (e.g. "FLAG SET", "CHECK", etc.)
+# "$message" should contain a description of the action (e.g. "flag --[example] set")
+# "$state" should contain the status of the action, must be one of those in the $state array defined in the inform() fxn
 
-    # Get current date and time in RFC 5424 format (syslog compliant)
-    # Note: The '+%Y-%m-%dT%H:%M:%SZ' format provides UTC time. Adjust if you need local time.
-    local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
-    # Construct the log message - I hate syslog priorities, so you get INFO severity for all messages
-    local logMessage="<134>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
-
-    # Create log dir if does not exist already
-    [ ! -d /var/log/deploy-graylog ] && mkdir /var/log/deploy-graylog
-
-    # Append the log message to the file
-    echo "${logMessage}" >> /var/log/deploy-graylog/deploy-graylog.log
-}
-
-# Display info to user via stdout (distinct from log file output)
+# Display info to user via stdout (also sends to logfile):
 inform() {
     local activity="$1"
     local message="$2"
@@ -60,7 +43,7 @@ inform() {
     case "$state" in
         OK|PASS) color=$UGREEN;;
         WARN) color=$UYELLOW;;
-        FAIL) color=$URED;;
+        ERROR) color=$URED;;
     esac
 
     # Calculate the number of dots
@@ -80,6 +63,34 @@ inform() {
 
     log "$1" "$2" "$3"
 }
+
+
+# Logging function - yeah.. I went there.
+# We're a logging company. 
+log() {
+    # Capture parameters
+    local activity="$1"
+    local message="$2"
+    local state="$3"
+    local prival="$4" # Syslog priority value
+
+    # Get current date and time in RFC 5424 format (syslog compliant)
+    # Note: The '+%Y-%m-%dT%H:%M:%SZ' format provides UTC time. Adjust if you need local time.
+    local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+    # If no Syslog prival set, default to "local0" facility and "INFO" severity (aka 134):
+    [ -z $prival ] && prival="134"
+
+    # Construct the log message - I hate syslog priorities, so you get INFO severity for all messages
+    local logMessage="<$prival>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
+
+    # Create log dir if does not exist already
+    [ ! -d /var/log/deploy-graylog ] && mkdir /var/log/deploy-graylog
+
+    # Append the log message to the file
+    echo "${logMessage}" >> /var/log/deploy-graylog/deploy-graylog.log
+}
+
 
 # Process flags
 while [[ $# -gt 0 ]]; do
@@ -107,30 +118,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 
-# Example usage remains the same.
 
+# ================ #
+# Preflight Checks #
+# ================ #
 
-
-# Preflight
-# * Load Flags
-# * Get OS
-# * Get Memory
-# * Check for Docker
-# * * No Docker, Check for package manager
-
-
-
-
-
-
+# Exit if running as non-root user:
 if [ "$EUID" -ne 0 ]; then
-  inform "CHECK" "Permissions: Not running as Root" "WARN"
-  exit
+  inform "CHECK" "Not running as root, exiting..." "ERROR"
+  exit 1
 fi
 
-
-function isPresent { command -v "$1" &> /dev/null && echo 1; }
-source /etc/os-release #Get OS Details
+# Source info from /etc/os-release, fail if missing
+if [ -e /etc/os-release ]; then
+    source /etc/os-release
+else
+    inform "CHECK" "No /etc/os-release file found. This script only works in Linux! Exiting..." "ERROR"
+    exit 1
+fi
 
 TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024;}' < /proc/meminfo)
 MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
