@@ -1,8 +1,15 @@
 #!/bin/bash
 # Graylog Automated Docker Install
 # Recommend 16GB of RAM and at least 2 cpus but it CAN run on less
+
+# Clear current screen for cleanliness:
 clear
 
+# =========================== #
+# Initialize global variables #
+# =========================== #
+
+# Formatting vars:
 NC='\033[0m'
 URED='\033[4;31m'
 UGREEN='\033[4;32m'
@@ -10,21 +17,114 @@ UYELLOW='\033[4;33m'
 BGREEN='\033[1;32m' 
 IBLACK='\033[0;100m'
 
+# Flag vars:
+NOLOGGING=0
+GLLATEST=0
+SKIPCHECKS=0
+
+# ======================== #
+# Logging / Meta Functions #
+# ======================== #
+
+# Logging function - yeah.. I went there.
+# We're a logging company. 
+log() {
+    # Capture parameters
+    local activity="$1"
+    local message="$2"
+    local state="$3"
+
+    # Get current date and time in RFC 5424 format (syslog compliant)
+    # Note: The '+%Y-%m-%dT%H:%M:%SZ' format provides UTC time. Adjust if you need local time.
+    local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+    # Construct the log message - I hate syslog priorities, so you get INFO severity for all messages
+    local logMessage="<134>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
+
+    # Append the log message to the file
+    echo "${logMessage}" >> deploy-graylog.log
+}
+
+# Display info to user via stdout (distinct from log file output)
+inform() {
+    local activity="$1"
+    local message="$2"
+    local state="$3"
+    local color=$NC
+    local dots
+
+    # Determine the color based on the state
+    case "$state" in
+        OK|PASS) color=$UGREEN;;
+        WARN) color=$UYELLOW;;
+        FAIL) color=$URED;;
+    esac
+
+    # Calculate the number of dots
+    local totalLength=$(( ${#activity} + ${#message} + ${#state} + 4 )) # +4 for the brackets
+    dots=$(( 80 - totalLength ))
+
+    # Generate the dot string
+    local dotString=$(printf '%*s' "$dots" | tr ' ' '.')
+
+    # Display the formatted message
+    echo -e "[${activity}][${message}]${dotString}[${color}${state}${NC}]"
+
+    # Call log function if logging is not disabled
+    if [ "$NOLOGGING" = false ]; then
+        log "$activity" "$message" "$state"
+    fi
+
+    log "$1" "$2" "$3"
+}
+
+# Process flags
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --NOLOGGING)
+      NOLOGGING=1
+      inform "FLAG" "$1 set" "OK"
+      shift # Move to next argument
+      ;;
+    --LATEST)
+      GLLATEST=1
+      inform "FLAG" "$1 set" "OK"
+      shift
+      ;;
+    --SKIPCHECKS)
+      SKIPCHECKS=1
+      inform "FLAG" "$1 set" "OK"
+      shift
+      ;;
+    *)
+      inform "FLAG" "Unknown flag $1" "warn"
+      shift
+      ;;
+  esac
+done
+
+
+# Example usage remains the same.
+
+
+
+# Preflight
+# * Load Flags
+# * Get OS
+# * Get Memory
+# * Check for Docker
+# * * No Docker, Check for package manager
+
+
+
+
+
+
 if [ "$EUID" -ne 0 ]
-  then echo -e "${URED}This script needs to run as root${NC}"
+    inform "CHECK" "Permissions: Not running as Root" "WARN"
   exit
 fi
 
-if [[ "$1" == "--latest" ]]; then
-    echo -e "${URED}You've opted to use the latest graylog release.${NC}\n\n You sure? [y/n]"
-    read CHOICE
-      if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
-        echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
-        exit 1
-    else
-        GLLATEST=true
-    fi
-fi
 
 function isPresent { command -v "$1" &> /dev/null && echo 1; }
 source /etc/os-release #Get OS Details
