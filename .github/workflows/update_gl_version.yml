@@ -2,7 +2,8 @@ name: "Update Graylog Version"
 on:
   schedule:
     - cron:  '0 0 * * *'    # At midnight, daily
-
+permissions:
+  contents: write
 jobs:
   Update-Docker-Compose-File:
     runs-on: "ubuntu-latest"
