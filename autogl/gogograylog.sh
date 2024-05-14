@@ -117,17 +117,7 @@ log() {
 # Process flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --NOLOGGING)
-      NOLOGGING=1
-      inform "FLAG" "$1 set" "OK"
-      shift # Move to next argument
-      ;;
-    --LATEST)
-      GLLATEST=1
-      inform "FLAG" "$1 set" "OK"
-      shift
-      ;;
-    --SKIPCHECKS)
+    --skip-checks)
       SKIPCHECKS=1
       inform "FLAG" "$1 set" "OK"
       shift
