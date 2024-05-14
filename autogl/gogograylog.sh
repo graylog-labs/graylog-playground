@@ -160,25 +160,43 @@ else
 fi
 
 
-#Test for WSL
+# Test for WSL
 if grep -qi microsoft /proc/version; then
   WSL=1
 fi
 
+# Get interface IP address of system
 if [ $(which ip) ]; then
 	read -r _{,} GATEWAY_IP _ _ _ INTERNAL_IP _ < <(ip r g 1.0.0.0)
 else
 	INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
 fi
 
+# Get external IP of system:
 if [ $(which curl) ]; then
 	EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
 else
 	EXTERNAL_IP=$(wget -qO- https://ipecho.net/plain --no-check-certificate 2> /dev/null)
 fi
 
-#Give some nice details
-echo -e "${IBLACK}System Information${NC}
+# CPU arch check
+if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
+	echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
+	exit 64
+fi
+
+# Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
+if [ ! $(grep avx /proc/cpuinfo) ]; then
+    echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}"
+fi
+
+
+# ===================== #
+# Main script execution #
+# ===================== #
+
+# Display system details for user:
+echo -e "${DGRAYBG}System Information${NC}
 Total Memory:\t\t${UGREEN}$TOTAL_MEM MB${NC}
 RAM given to Graylog:\t${UGREEN}$HALF_MEM MB${NC}
 System Architecture:\t${UGREEN}$ARCH${NC}
@@ -187,6 +205,7 @@ External IP:\t\t${UGREEN}$EXTERNAL_IP${NC}
 Logfile:\t\t${UGREEN}$LOG_FILE${NC}
 "
 
+# Memory capacity logic checks:
 if [ $TOTAL_MEM -lt 2000 ]; then
     echo -e "Graylog ${URED}cannot run on less then 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment"
 elif [ $TOTAL_MEM -lt 8000 ]; then 
@@ -198,12 +217,8 @@ else
     echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM"
 fi
 
-if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
-	echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
-	exit 64
-fi
-
-function updateSystem {
+# Update base system:
+updateSystem() {
 	echo -e "${UGREEN}Updating System...${NC}"
 	if [ $(which apt) ]; then
 		apt-get update &>> "$LOG_FILE"
@@ -213,8 +228,9 @@ function updateSystem {
 	fi
 }
 
+# Prompt user for authorization for Docker installation:
 if [ $(which docker) ]; then
-    echo -e "${UYELLOW}Warning!${NC} Docker is currently installed. \nThis Script will ${URED}REMOVE${NC} current docker installs and replace with the latest version. \nDo you want to continue? \n[Y/N]"
+    echo -e "${UYELLOW}Warning!${NC} Docker is currently installed. \nThis Script will ${URED}REMOVE${NC} current Docker installs and replace with the latest version. \nDo you want to continue? \n[y/N]"
     read CHOICE
     if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
         echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
@@ -224,7 +240,7 @@ if [ $(which docker) ]; then
     rm ~/gl_* &>> "$LOG_FILE" #cleanup potential left-overs if re-running
 fi
 
-#Set Admin Password
+# Set Admin Password
 PSWD="bunk"
 until [ "$PSWD" == "$PSWD2" ]
 do
@@ -241,7 +257,7 @@ do
         fi
 done
 
-#Firewall Cleanup
+# Firewall Cleanup
 if [ $(which ufw) ]; then
 	UFWSTATUS=$(ufw status)
 fi
@@ -257,6 +273,7 @@ elif [ $(which iptables) ]; then FIREWALL=iptables;
 elif [ $(which nft) ]; then FIREWALL=nft;
 fi
 
+# Install Docker
 if [ $(which apt) ]; then
 	export DEBIAN_FRONTEND=noninteractive
     if [ $(which docker) ]; then
@@ -271,7 +288,7 @@ if [ $(which apt) ]; then
     curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     updateSystem
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin openjdk-11-jre-headless jq &>> "$LOG_FILE"
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
  
 elif [ $(which yum) ]; then
 	    if [ $(which docker) ]; then
@@ -292,11 +309,17 @@ else
 	exit
 fi
 
-curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
-#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+# Fetch docker-compose.yml from repo:
+if [ $(which curl) ]; then
+	curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+else
+	wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+fi
+
+# Exit if failed to get docker-compose.yml from repo:
 if [ ! -f ~/docker-compose.yml ]; then
     echo -e "${URED}Failed to grab docker compose file from GIT... Check your internet connection and try again${NC}"
-    exit 1337
+    exit 1
 fi
 
 #Latest GL Version
