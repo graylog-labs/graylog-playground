@@ -27,6 +27,11 @@ HALF_MEM=$((TOTAL_MEM/2))
 Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
 ARCH=$(uname -m)
 
+# Exit if running as non-root user:
+if [ "$EUID" -ne 0 ]; then
+  echo -e "${URED}CRITICAL - This script must be run as root, exiting...${NC}" 
+  exit 1
+fi
 
 # ==================== #
 # Supporting Functions #
@@ -121,12 +126,6 @@ addFirewallRule() {
 # ================ #
 # Preflight Checks #
 # ================ #
-
-# Exit if running as non-root user:
-if [ "$EUID" -ne 0 ]; then
-  log "CRITICAL" "Not running as root, exiting..." 
-  exit 1
-fi
 
 # Process flags
 while [[ $# -gt 0 ]]; do
