@@ -2,9 +2,6 @@
 # Graylog Automated Docker Install
 # Recommend 16GB of RAM and at least 2 cpus but it CAN run on less
 
-# Clear current screen for cleanliness:
-clear
-
 # =========================== #
 # Initialize global variables #
 # =========================== #
@@ -87,6 +84,44 @@ log() {
     echo "${logMessage}" >> "$LOG_FILE"
 }
 
+# Update base system:
+updateSystem() {
+	echo -e "${UGREEN}Updating System...${NC}"
+	if [ $(which apt) ]; then
+		apt-get update &>> "$LOG_FILE"
+		apt-get upgrade -y &>> "$LOG_FILE"
+	elif [ $(which yum) ]; then
+		yum update -y &>> "$LOG_FILE"
+	fi
+}
+
+addFirewallRule() {
+	if [ $(which yum) ]; then
+        IPTABLESLOC="/etc/sysconfig/iptables"
+    else
+        IPTABLESLOC="/etc/iptables/rules.v4"
+    fi
+    echo -e "Adding firewall rule for port $1 $2 ($3) via $FIREWALL..."
+    case "$FIREWALL" in
+		none) echo -e "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
+		ufw) ufw allow from any to any port "$1" proto $2 comment "$3" ;;
+		firewalld) firewall-cmd "--add-port=$1/$2" --permanent && firewall-cmd --reload ;;
+		iptables) iptables -A INPUT -p $2 -m $2 --dport "$1" -j ACCEPT -m comment --comment "$3" && iptables-save > $IPTABLESLOC ;;
+		nft) nft add rule filter INPUT $2 dport "$1" accept comment "\"$3\"" ;;
+		*) echo -e "${URED}Unsupported Firewall: $FIREWALL${NC}" ;;
+	esac
+}
+
+
+# ================ #
+# Preflight Checks #
+# ================ #
+
+# Exit if running as non-root user:
+if [ "$EUID" -ne 0 ]; then
+  log "CRITICAL" "Not running as root, exiting..." 
+  exit 1
+fi
 
 # Process flags
 while [[ $# -gt 0 ]]; do
@@ -112,18 +147,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-
-
-# ================ #
-# Preflight Checks #
-# ================ #
-
-# Exit if running as non-root user:
-if [ "$EUID" -ne 0 ]; then
-  log "CRITICAL" "Not running as root, exiting..." 
-  exit 1
-fi
 
 # Create log dir if does not exist already
 if [ ! -d /var/log/graylog-server ]; then
@@ -180,6 +203,9 @@ fi
 # Main script execution #
 # ===================== #
 
+# Clear current screen for cleanliness:
+clear
+
 # Display system details for user:
 echo -e "${DGRAYBG}System Information${NC}
 Total Memory:\t\t${UGREEN}$TOTAL_MEM MB${NC}
@@ -201,17 +227,6 @@ else
     echo -e "There is more then 8GB of RAM on this host! Excellent. We will be using HALF of system RAM"
     echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM"
 fi
-
-# Update base system:
-updateSystem() {
-	echo -e "${UGREEN}Updating System...${NC}"
-	if [ $(which apt) ]; then
-		apt-get update &>> "$LOG_FILE"
-		apt-get upgrade -y &>> "$LOG_FILE"
-	elif [ $(which yum) ]; then
-		yum update -y &>> "$LOG_FILE"
-	fi
-}
 
 # Prompt user for authorization for Docker installation:
 if [ $(which docker) ]; then
@@ -313,23 +328,6 @@ if [ $GLLATEST ]; then
     dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' ~/docker-compose.yml | tr -d '"' | tr -d " ")
     sed -i "s+enterprise\:$dcv+enterprise\:$lgl+g" ~/docker-compose.yml
 fi
-
-function addFirewallRule {
-	if [ $(which yum) ]; then
-        IPTABLESLOC="/etc/sysconfig/iptables"
-    else
-        IPTABLESLOC="/etc/iptables/rules.v4"
-    fi
-    echo -e "Adding firewall rule for port $1 $2 ($3) via $FIREWALL..."
-    case "$FIREWALL" in
-		none) echo -e "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
-		ufw) ufw allow from any to any port "$1" proto $2 comment "$3" ;;
-		firewalld) firewall-cmd "--add-port=$1/$2" --permanent && firewall-cmd --reload ;;
-		iptables) iptables -A INPUT -p $2 -m $2 --dport "$1" -j ACCEPT -m comment --comment "$3" && iptables-save > $IPTABLESLOC ;;
-		nft) nft add rule filter INPUT $2 dport "$1" accept comment "\"$3\"" ;;
-		*) echo -e "${URED}Unsupported Firewall: $FIREWALL${NC}" ;;
-	esac
-}
 
 if [[ "$FIREWALL" != "none" ]]; then
     echo -e "${UGREEN}Adding Firewall Rules for Graylog Service Ports and Inputs${NC}"
