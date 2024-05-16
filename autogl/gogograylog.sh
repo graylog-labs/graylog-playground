@@ -80,6 +80,11 @@ log() {
     # so we don't have to summon Satan every time we deploy Graylog :)
     local logMessage="<$prival>1 [$timestamp] - $severity - $message"
     
+    # Create log dir if does not exist already
+    if [ ! -d /var/log/graylog-server ]; then
+        mkdir /var/log/graylog-server
+    fi
+    
     # Append the log message to the file
     echo "${logMessage}" >> "$LOG_FILE"
 }
@@ -147,11 +152,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-# Create log dir if does not exist already
-if [ ! -d /var/log/graylog-server ]; then
-    mkdir /var/log/graylog-server
-fi
 
 # Create new log file. If file exists, append its creation date to end and delete original.
 if [ -e "$LOG_FILE" ]; then
