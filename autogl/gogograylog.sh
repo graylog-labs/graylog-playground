@@ -280,11 +280,11 @@ fi
 
 # Fetch docker-compose.yml from repo:
 if [ $(which curl) ]; then
-	curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
-    curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/.env -o ~/.env &>> "$LOG_FILE"
+	curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+    curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -o ~/.env &>> "$LOG_FILE"
 else
-	wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
-    wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/.env -P ~/ &>> "$LOG_FILE"
+	wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+    wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -P ~/ &>> "$LOG_FILE"
 fi
 
 # Exit if failed to get docker-compose.yml from repo:
@@ -432,8 +432,8 @@ while ! curl -s -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes 
 done
 
 #Add inputs via CP
-curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
-#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
+#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
 for entry in ~/gl_*
 do
   echo -e "\n\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
