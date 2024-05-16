@@ -94,17 +94,6 @@ log() {
     echo "${logMessage}" >> "$LOG_FILE"
 }
 
-# Update base system:
-updateSystem() {
-	echo -e "${UGREEN}Updating System...${NC}"
-	if [ $(which apt) ]; then
-		apt-get update &>> "$LOG_FILE"
-		apt-get upgrade -y &>> "$LOG_FILE"
-	elif [ $(which yum) ]; then
-		yum update -y &>> "$LOG_FILE"
-	fi
-}
-
 addFirewallRule() {
 	if [ $(which yum) ]; then
         IPTABLESLOC="/etc/sysconfig/iptables"
@@ -202,6 +191,9 @@ fi
 # Main script execution #
 # ===================== #
 
+# Initialize log file:
+log "INFO" "Started new gogograylog deployment!"
+
 # Clear current screen for cleanliness:
 clear
 
@@ -227,92 +219,72 @@ else
     echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM"
 fi
 
-# Prompt user for authorization for Docker installation:
-if [ $(which docker) ]; then
-    echo -e "${UYELLOW}Warning!${NC} Docker is currently installed. \nThis Script will ${URED}REMOVE${NC} current Docker installs and replace with the latest version. \nDo you want to continue? \n[y/N]"
-    read CHOICE
-    if [[ $CHOICE != @(y|Y|yes|YES|Yes) ]]; then
-        echo -e "I got an input of ${URED}$CHOICE${NC} so I'm assuming that's a no. Exiting!"
-        exit 1
-    fi
-    rm ~/docker-compose.yml &>> "$LOG_FILE" #cleanup potential left-overs if re-running
-    rm ~/gl_* &>> "$LOG_FILE" #cleanup potential left-overs if re-running
-fi
-
 # Set Admin Password
 PSWD="bunk"
 until [ "$PSWD" == "$PSWD2" ]
 do
-        echo -e "${GREEN}\nEnter Desired Graylog Login Password${NC}"
-        read -s -p "Password: " PSWD
-        echo -e "${GREEN}\nEnter Desired Graylog Login Password again${NC}"
-        read -s -p "Password: " PSWD2
-        echo -e "\n"
-        if [[ "$PSWD" == "$PSWD2" ]]; then
-                GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
-        else
-                echo -e "${RED}\nPasswords do not match, press enter to try again${NC}"
-                read
-        fi
+    echo -e "${GREEN}\nEnter Desired Graylog Login Password${NC}"
+    read -s -p "Password: " PSWD
+    echo -e "${GREEN}\nEnter Desired Graylog Login Password again${NC}"
+    read -s -p "Password: " PSWD2
+    echo -e "\n"
+    if [[ "$PSWD" == "$PSWD2" ]]; then
+        GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
+    else
+        echo -e "${RED}\nPasswords do not match, press enter to try again${NC}"
+        read
+    fi
 done
-
-# Firewall Cleanup
-if [ $(which ufw) ]; then
-	UFWSTATUS=$(ufw status)
-fi
-
-if [ $(which nft) ]; then
-    NFTSTATUS=$(nft list ruleset)
-fi
 
 FIREWALL=none
 if [ $(which ufw) ]; then FIREWALL=ufw;
 elif [ $(which firewall-cmd) ]; then FIREWALL=firewalld;
-elif [ $(which iptables) ]; then FIREWALL=iptables; 
 elif [ $(which nft) ]; then FIREWALL=nft;
+elif [ $(which iptables) ]; then FIREWALL=iptables; 
+fi
+
+# Upgrade base system:
+echo -e "${UGREEN}Updating System...${NC}"
+if [ $(which apt-get) ]; then
+    apt-get update &>> "$LOG_FILE"
+    apt-get upgrade -y &>> "$LOG_FILE"
+elif [ $(which yum) ]; then
+    yum update -y &>> "$LOG_FILE"
 fi
 
 # Install Docker
-if [ $(which apt) ]; then
-	export DEBIAN_FRONTEND=noninteractive
-    if [ $(which docker) ]; then
-        echo -e "${URED}Removing current docker install${NC}"
-        apt-get remove -y docker docker-engine docker.io containerd runc &>> "$LOG_FILE"
-    fi
-    updateSystem
-
-    apt-get install -y ca-certificates curl gnupg lsb-release &>> "$LOG_FILE"
-    echo -e "${UGREEN}Installing Docker${NC}"
-    mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
-    curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
-    echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-    updateSystem
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
- 
-elif [ $(which yum) ]; then
-	    if [ $(which docker) ]; then
-        echo -e "${URED}Removing current docker install${NC}"
-        yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc &>> "$LOG_FILE"
-    fi
-    updateSystem
-    echo -e "${UGREEN}Installing Docker${NC}" 
-    yum install -y yum-utils &>> "$LOG_FILE"
-    ID=centos
-    yum-config-manager --add-repo https://download.docker.com/linux/$ID/docker-ce.repo &>> "$LOG_FILE"
-    yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
-
+if [ $(which docker) ]; then
+    echo -e "\n${UGREEN}Docker version installed:${NC} $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
 else
-	echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
-	echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
-	echo -e "${UGREEN}$NAME${URED} is not a supported distribution at this time.${NC}"
-	exit
+    if [ $(which apt-get) ]; then
+        export DEBIAN_FRONTEND=noninteractive
+        echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
+        apt-get install -y ca-certificates curl gnupg lsb-release &>> "$LOG_FILE"
+        mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
+        curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+        echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
+    elif [ $(which yum) ]; then
+        echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
+        yum install -y yum-utils &>> "$LOG_FILE"
+        # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
+        yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
+        yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
+    else
+        echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
+        echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
+        echo -e "${UGREEN}$NAME${URED} is not a supported distribution at this time.${NC}"
+        exit 1
+    fi
 fi
 
 # Fetch docker-compose.yml from repo:
 if [ $(which curl) ]; then
 	curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+    curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/.env -o ~/.env &>> "$LOG_FILE"
 else
 	wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
+    wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/main/autogl/.env -P ~/ &>> "$LOG_FILE"
 fi
 
 # Exit if failed to get docker-compose.yml from repo:
