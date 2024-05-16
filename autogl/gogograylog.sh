@@ -18,9 +18,9 @@ BGREEN='\033[1;32m' # bold green
 DGRAYBG='\033[0;100m' # dark gray background
 
 # Flag vars:
-NOLOGGING=0
-GLLATEST=0
-SKIPCHECKS=0
+GRAYLOG_VERSION=
+OPENSEARCH_VERSION=
+MONGODB_VERSION=
 
 # External system vars:
 LOG_FILE="/var/log/deploy-graylog/deploy-graylog.log"
@@ -117,8 +117,18 @@ log() {
 # Process flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --skip-checks)
-      SKIPCHECKS=1
+    --graylog-version)
+      GRAYLOG_VERSION="$1"
+      inform "FLAG" "$1 set" "OK"
+      shift
+      ;;
+    --opensearch-version)
+      OPENSEARCH_VERSION="$1"
+      inform "FLAG" "$1 set" "OK"
+      shift
+      ;;
+    --mongodb-version)
+      MONGODB_VERSION="$1"
       inform "FLAG" "$1 set" "OK"
       shift
       ;;
@@ -148,7 +158,6 @@ else
     inform "CHECK" "No /etc/os-release file found. This script only works in Linux! Exiting..." "ERROR"
     exit 1
 fi
-
 
 # Test for WSL
 if grep -qi microsoft /proc/version; then
@@ -314,7 +323,7 @@ fi
 
 #Latest GL Version
 if [ $GLLATEST ]; then
-    lgl=$(curl -L --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sed 's/latest//' | sort --version-sort | tail -n 1)
+    lgl=$(curl -sL --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sort --version-sort | tail -n 1)
     dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' ~/docker-compose.yml | tr -d '"' | tr -d " ")
     sed -i "s+enterprise\:$dcv+enterprise\:$lgl+g" ~/docker-compose.yml
 fi
