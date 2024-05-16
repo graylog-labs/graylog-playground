@@ -23,7 +23,7 @@ OPENSEARCH_VERSION=
 MONGODB_VERSION=
 
 # External system vars:
-LOG_FILE="/var/log/deploy-graylog/deploy-graylog.log"
+LOG_FILE="/var/log/graylog-server/deploy-graylog.log"
 TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024;}' < /proc/meminfo)
 MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
 HALF_MEM=$((TOTAL_MEM/2))
@@ -31,83 +31,57 @@ Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
 ARCH=$(uname -m)
 
 
-# ======================== #
-# Logging / Meta Functions #
-# ======================== #
-
-# "$activity" should contain the type of action that is occurring (e.g. "FLAG SET", "CHECK", etc.)
-# "$message" should contain a description of the action (e.g. "flag --[example] set")
-# "$state" should contain the status of the action, must be one of those in the $state array defined in the inform() fxn
-
-
-# Create new log file. If file exists, append its creation date to end and delete original.
-if [ -e "$LOG_FILE" ]; then
-    cp "$LOG_FILE" "$LOG_FILE.$(date -r "$LOG_FILE" "+%Y-%m-%d_%H-%M-%S")"
-    rm "$LOG_FILE"
-fi
-date > "$LOG_FILE"
-
-
-# Display info to user via stdout (also sends to logfile):
-inform() {
-    local activity="$1"
-    local message="$2"
-    local state="$3"
-    local prival
-    local color=$NC
-    local dots
-
-    # Determine the color & syslog priority value based on the state:
-    case "$state" in
-        OK|PASS) color=$UGREEN
-        prival="134"
-        ;;
-        WARN) color=$UYELLOW
-        prival="132"
-        ;;
-        ERROR) color=$URED
-        prival="131"
-        ;;
-    esac
-
-    # Calculate the number of dots
-    local totalLength=$(( ${#activity} + ${#message} + ${#state} + 4 )) # +4 for the brackets
-    dots=$(( 80 - totalLength ))
-
-    # Generate the dot string
-    local dotString=$(printf '%*s' "$dots" | tr ' ' '.')
-
-    # Display the formatted message
-    echo -e "[${activity}][${message}]${dotString}[${color}${state}${NC}]"
-
-    # Call log function if logging is not disabled
-    if [ "$NOLOGGING" = false ]; then
-        log "$activity" "$message" "$state"
-    fi
-
-    log "$1" "$2" "$3" "$prival"
-}
-
+# ==================== #
+# Supporting Functions #
+# ==================== #
 
 # Logging function - yeah.. I went there.
 # We're a logging company. 
 log() {
     # Capture parameters
-    local activity="$1"
+    local severity="${1^^}" # ^^ converts value to uppercase
     local message="$2"
-    local state="$3"
-    local prival="$4" # Syslog priority value
 
     # Get current date and time in RFC 5424 format (syslog compliant)
     # Note: The '+%Y-%m-%dT%H:%M:%SZ' format provides UTC time. Adjust if you need local time.
     local timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 
+    # Set Syslog prival based on supplied $severity. Using local0 facility for all values.
+    # Default prival is 134 aka INFO severity
+    local prival=134
+    case "$severity" in
+      DEBUG)
+        let prival++
+        shift
+        ;;
+      INFO)
+        shift
+        ;;
+      NOTICE)
+        let prival--
+        shift
+        ;;
+      WARN|WARNING)
+        let prival=$prival-2
+        shift
+        ;;
+      ERROR)
+        let prival=$prival-3
+        shift
+        ;;
+      CRIT|CRITICAL)
+        let prival=$prival-4
+        shift
+        ;;
+      *)
+        log "WARN" "Unknown severity level $1. Supported severities are DEBUG, INFO, NOTICE, WARN, ERROR, and CRIT"
+        shift
+        ;;
+    esac
+
     # Construct the log message using an appropriate Syslog priority value
     # so we don't have to summon Satan every time we deploy Graylog :)
-    local logMessage="<$prival>1 ${timestamp} - - - - [activity=\"${activity}\"] [message=\"${message}\"] [state=\"${state}\"]"
-
-    # Create log dir if does not exist already
-    [ ! -d /var/log/deploy-graylog ] && mkdir /var/log/deploy-graylog
+    local logMessage="<$prival>1 [$timestamp] - $severity - $message"
     
     # Append the log message to the file
     echo "${logMessage}" >> "$LOG_FILE"
@@ -119,21 +93,21 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --graylog-version)
       GRAYLOG_VERSION="$1"
-      inform "FLAG" "$1 set" "OK"
+      log "INFO" "Graylog version: $1"
       shift
       ;;
     --opensearch-version)
       OPENSEARCH_VERSION="$1"
-      inform "FLAG" "$1 set" "OK"
+      log "INFO" "Opensearch version: $1"
       shift
       ;;
     --mongodb-version)
       MONGODB_VERSION="$1"
-      inform "FLAG" "$1 set" "OK"
+      log "INFO" "MongoDB version: $1"
       shift
       ;;
     *)
-      inform "FLAG" "Unknown flag $1" "warn"
+      log "WARN" "Unknown flag: $1"
       shift
       ;;
   esac
@@ -147,15 +121,27 @@ done
 
 # Exit if running as non-root user:
 if [ "$EUID" -ne 0 ]; then
-  inform "CHECK" "Not running as root, exiting..." "ERROR" 
+  log "CRITICAL" "Not running as root, exiting..." 
   exit 1
 fi
+
+# Create log dir if does not exist already
+if [ ! -d /var/log/graylog-server ]; then
+    mkdir /var/log/graylog-server
+fi
+
+# Create new log file. If file exists, append its creation date to end and delete original.
+if [ -e "$LOG_FILE" ]; then
+    cp "$LOG_FILE" "$LOG_FILE.$(date -r "$LOG_FILE" "+%Y-%m-%d_%H-%M-%S")"
+    rm "$LOG_FILE"
+fi
+date > "$LOG_FILE"
 
 # Source info from /etc/os-release, fail if missing
 if [ -e /etc/os-release ]; then
     source /etc/os-release
 else
-    inform "CHECK" "No /etc/os-release file found. This script only works in Linux! Exiting..." "ERROR"
+    log "CRITICAL" "No /etc/os-release file found. This script only works in Linux! Exiting..."
     exit 1
 fi
 
