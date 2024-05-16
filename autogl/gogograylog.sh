@@ -322,13 +322,66 @@ if [ ! -f ~/docker-compose.yml ]; then
     exit 1
 fi
 
-#Latest GL Version
-if [ $GLLATEST ]; then
-    lgl=$(curl -sL --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sort --version-sort | tail -n 1)
-    dcv=$(sed -n 's/image: "graylog\/graylog-enterprise://p' ~/docker-compose.yml | tr -d '"' | tr -d " ")
-    sed -i "s+enterprise\:$dcv+enterprise\:$lgl+g" ~/docker-compose.yml
+# Update docker-compose.yml with selected versions:
+### Graylog ###
+# If version is supplied, validate it against list of available versions:
+if [ $GRAYLOG_VERSION ]; then
+    # Fetch available Graylog versions from Docker hub:
+    GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ ^$GRAYLOG_VERSION$ ]]; then
+        ver="${GRAYLOG_VERSION:0:2}"
+        echo $ver
+        echo -e "${URED}Graylog version not found: $GRAYLOG_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    # Set to latest Graylog version available:
+    GRAYLOG_VERSION=$(for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
 fi
 
+### MongoDB ###
+# If version is supplied, validate it against list of available versions:
+if [ $MONGODB_VERSION ]; then
+    # Fetch available Graylog versions from Docker hub:
+    # MongoDB tag pulling is currently borked, but that's ok bc they have a ton of addtl tags to parse through anyway, so just listing all compatible versions manually:
+    MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ ^$MONGODB_VERSION$ ]]; then
+        ver="${MONGODB_VERSION:0:2}"
+        echo $ver
+        echo -e "${URED}MongoDB version not found: $MONGODB_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    MONGODB_VERSION=$(for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+fi
+
+### Opensearch ###
+# If version is supplied, validate it against list of available versions:
+if [ $OPENSEARCH_VERSION ]; then
+    # Fetch available Graylog versions from Docker hub:
+    OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r))
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ ^$OPENSEARCH_VERSION$ ]]; then
+        ver="${OPENSEARCH_VERSION:0:2}"
+        echo $ver
+        echo -e "${URED}Opensearch version not found: $OPENSEARCH_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    OPENSEARCH_VERSION="latest"
+fi
+
+# Update docker-compose.yml with Graylog stack versions:
+sed -n "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/p" ~/.env
+sed -n "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/p" ~/.env
+sed -n "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/p" ~/.env
+
+# Add firewall rules if necessary:
 if [[ "$FIREWALL" != "none" ]]; then
     echo -e "${UGREEN}Adding Firewall Rules for Graylog Service Ports and Inputs${NC}"
     addFirewallRule "443" "tcp" "Default GUI"

@@ -1,14 +1,13 @@
-version: "3.8"
-
 services:
   mongodb:
-    image: "mongo:6"
+    container_name: mongodb
+    image: "mongo:${MONGODB_VERSION}"
     volumes:
       - "mongodb_data:/data/db"
     restart: "always"
 
   opensearch:
-    container_name: "opensearch"
+    container_name: opensearch
     environment:
       OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
@@ -17,7 +16,7 @@ services:
       action.auto_create_index: "false"
       DISABLE_INSTALL_DEMO_CONFIG: "true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
       DISABLE_SECURITY_PLUGIN: "true" # disables security plugin entirely in OpenSearch by setting plugins.security.
-    image: "opensearchproject/opensearch:2"
+    image: "opensearchproject/opensearch:${OPENSEARCH_VERSION}"
     ulimits:
       memlock:
         hard: -1
@@ -30,7 +29,8 @@ services:
     restart: "always"
 
   graylog:
-    image: "graylog/graylog-enterprise:5.2.6-1"
+    container_name: graylog
+    image: "graylog/graylog-enterprise:${GRAYLOG_VERSION}"
     depends_on:
       opensearch:
         condition: "service_started"
