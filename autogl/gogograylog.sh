@@ -209,7 +209,7 @@ fi
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
 echo "This is generally best practice, as reusing existing volumes is problematic if changing software versions between script executions."
 echo
-read -p "$(echo -e ${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]:${NC} )" x
+read -p "$(echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]:${NC} ")" x
 x=${x,,} # ,, converts value to lowercase
 if [ $x == "n" ]; then
     echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"

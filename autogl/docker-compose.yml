@@ -69,7 +69,7 @@ services:
 volumes:
   mongodb_data:
     name: "mongodb_data"
-  os_data:
+  opensearch_data:
     name: "opensearch_data"
   graylog_data:
     name: "graylog_data"
