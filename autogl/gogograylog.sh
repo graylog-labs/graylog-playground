@@ -202,6 +202,7 @@ fi
 
 # Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
 if [ ! $(grep avx /proc/cpuinfo) ]; then
+    NO_AVX=true # value here doesn't actually matter since var will be unset if AVX support is detected. This is why I used the negative phrasing too bc NO_AVX will never be "false".
     echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}\n"
 fi
 
@@ -211,7 +212,7 @@ echo "This is generally best practice, as reusing existing volumes is problemati
 echo
 read -p "$(echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]:${NC} ")" x
 x=${x,,} # ,, converts value to lowercase
-if [ $x == "n" ]; then
+if [ "$x" == "n" ]; then
     echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"
 else
     echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}\n"
@@ -222,7 +223,11 @@ else
     docker volume rm -f graylog_journal &>> "$LOG_FILE"
     docker volume rm -f mongodb_data &>> "$LOG_FILE"
     docker volume rm -f opensearch_data &>> "$LOG_FILE"
+    docker network rm -f graylog_network &>> "$LOG_FILE"
 fi
+
+# Delete existing docker-compose.yml file:
+[[ -e ~/docker-compose.yml ]] && rm -f ~/docker-compose.yml
 
 # ================ #
 # First User Input #
@@ -325,6 +330,13 @@ if [ $MONGODB_VERSION ]; then
     fi
 else
     MONGODB_VERSION=$(for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+fi
+# Check if supplied MongoDB version is compatible with CPU:
+ver="${MONGODB_VERSION:0:1}" # note that this instance $ver is diff than above. Above includes a trailing "." bc it is used for string comparison. This instance has no "." bc it is used for numeric comparison.
+if [ $NO_AVX ] && [ $ver -ge 5 ]; then
+    log "ERROR" "Your CPU does not support AVX Instructions, please choose a MongoDB version less than 5.x!"
+    echo -e "Alternatively, if running this on a VM, change the vCPU generation to Intel Sandy Bridge or newer and reboot."
+    exit 1
 fi
 
 ### Opensearch ###

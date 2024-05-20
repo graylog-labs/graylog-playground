@@ -4,6 +4,8 @@ services:
     image: "mongo:${MONGODB_VERSION}"
     volumes:
       - "mongodb_data:/data/db"
+    networks:
+      - graylog_network
     restart: "always"
 
   opensearch:
@@ -23,7 +25,8 @@ services:
         soft: -1
     ports:
     - "9200:9200/tcp"   # es ports
-
+    networks:
+      - graylog_network
     volumes:
       - "opensearch_data:/usr/share/opensearch/data"
     restart: "always"
@@ -43,7 +46,6 @@ services:
       GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
-
     ports:
       - "443:443/tcp"     # Server API
       - "514:514/udp"     # Syslog UDP
@@ -58,7 +60,8 @@ services:
       - "9000:9000/tcp"   # Server API
       - "12201:12201/tcp" # GELF TCP
       - "12201:12201/udp" # GELF UDP
-
+    networks:
+      - graylog_network
     volumes:
       - "graylog_data:/usr/share/graylog/data/data"
       - "graylog_journal:/usr/share/graylog/data/journal"
@@ -77,3 +80,6 @@ volumes:
     name: "graylog_journal"
   graylog_config:
     name: "graylog_config"
+
+networks:
+  graylog_network:
