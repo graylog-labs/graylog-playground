@@ -311,7 +311,7 @@ GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespa
 # If version is supplied, validate it against list of available versions:
 if [ $GRAYLOG_VERSION ]; then
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ ^$GRAYLOG_VERSION$ ]]; then
+    if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${GRAYLOG_VERSION}[[:space:]] ]]; then
         ver="${GRAYLOG_VERSION:0:2}"
         echo -e "${URED}Graylog version not found: $GRAYLOG_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
@@ -328,7 +328,7 @@ MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
 # If version is supplied, validate it against list of available versions:
 if [ $MONGODB_VERSION ]; then
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ ^$MONGODB_VERSION$ ]]; then
+    if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${MONGODB_VERSION}[[:space:]] ]]; then
         ver="${MONGODB_VERSION:0:2}"
         echo -e "${URED}MongoDB version not found: $MONGODB_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
@@ -341,7 +341,7 @@ fi
 ver="${MONGODB_VERSION:0:1}" # note that this instance $ver is diff than above. Above includes a trailing "." bc it is used for string comparison. This instance has no "." bc it is used for numeric comparison.
 if [ $NO_AVX ] && [ $ver -ge 5 ]; then
     log "ERROR" "Your CPU does not support AVX Instructions, please choose a MongoDB version less than 5.x!"
-    echo -e "Alternatively, if running this on a VM, change the vCPU generation to Intel Sandy Bridge or newer and reboot."
+    echo -e "Alternatively, if running this on a VM, change the vCPU generation to Intel Sandy Bridge or newer and try again."
     exit 1
 fi
 
@@ -351,7 +351,7 @@ OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/name
 # If version is supplied, validate it against list of available versions:
 if [ $OPENSEARCH_VERSION ]; then
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ ^$OPENSEARCH_VERSION$ ]]; then
+    if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${OPENSEARCH_VERSION}[[:space:]] ]]; then
         ver="${OPENSEARCH_VERSION:0:2}"
         echo -e "${URED}Opensearch version not found: $OPENSEARCH_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
