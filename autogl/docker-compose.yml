@@ -1,14 +1,15 @@
-version: "3.8"
-
 services:
   mongodb:
-    image: "mongo:6"
+    container_name: mongodb
+    image: "mongo:${MONGODB_VERSION}"
     volumes:
       - "mongodb_data:/data/db"
+    networks:
+      - graylog_network
     restart: "always"
 
   opensearch:
-    container_name: "opensearch"
+    container_name: opensearch
     environment:
       OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
@@ -17,20 +18,22 @@ services:
       action.auto_create_index: "false"
       DISABLE_INSTALL_DEMO_CONFIG: "true" # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
       DISABLE_SECURITY_PLUGIN: "true" # disables security plugin entirely in OpenSearch by setting plugins.security.
-    image: "opensearchproject/opensearch:2"
+    image: "opensearchproject/opensearch:${OPENSEARCH_VERSION}"
     ulimits:
       memlock:
         hard: -1
         soft: -1
     ports:
     - "9200:9200/tcp"   # es ports
-
+    networks:
+      - graylog_network
     volumes:
-      - "os-data1:/usr/share/opensearch/data"
+      - "opensearch_data:/usr/share/opensearch/data"
     restart: "always"
 
   graylog:
-    image: "graylog/graylog-enterprise:6.0.1-1"
+    container_name: graylog
+    image: "graylog/graylog-enterprise:${GRAYLOG_VERSION}"
     depends_on:
       opensearch:
         condition: "service_started"
@@ -38,12 +41,10 @@ services:
         condition: "service_started"
     entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
     environment:
-      GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 10gb
       GRAYLOG_PASSWORD_SECRET: somepasswordpepper
       GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
       GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
-
     ports:
       - "443:443/tcp"     # Server API
       - "514:514/udp"     # Syslog UDP
@@ -58,7 +59,8 @@ services:
       - "9000:9000/tcp"   # Server API
       - "12201:12201/tcp" # GELF TCP
       - "12201:12201/udp" # GELF UDP
-
+    networks:
+      - graylog_network
     volumes:
       - "graylog_data:/usr/share/graylog/data/data"
       - "graylog_journal:/usr/share/graylog/data/journal"
@@ -68,7 +70,15 @@ services:
 
 volumes:
   mongodb_data:
-  os-data1:
+    name: "mongodb_data"
+  opensearch_data:
+    name: "opensearch_data"
   graylog_data:
+    name: "graylog_data"
   graylog_journal:
+    name: "graylog_journal"
   graylog_config:
+    name: "graylog_config"
+
+networks:
+  graylog_network:
