@@ -2,6 +2,9 @@
 # Graylog Automated Docker Install
 # Recommend 16GB of RAM and at least 2 cpus but it CAN run on less
 
+# Validated this script works on the following distros (as of May 20 2024):
+# Debian 12
+
 # =========================== #
 # Initialize global variables #
 # =========================== #
