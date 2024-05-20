@@ -212,10 +212,10 @@ echo
 echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]: ${NC}"
 read x
 x=${x,,} # ,, converts value to lowercase
-if [ x == "n" ]; then
-    echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}"
+if [ $x == "n" ]; then
+    echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"
 else
-    echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}"
+    echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}\n"
     docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
     docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
     docker volume rm -f graylog_config &>> "$LOG_FILE"
@@ -235,7 +235,7 @@ until [ "$PSWD" == "$PSWD2" ]
 do
     read -sp "Enter Desired Graylog Admin Password: " PSWD
     read -sp "Enter Desired Graylog Admin Password again: " PSWD2
-    echo -e ""
+    echo
     if [[ "$PSWD" == "$PSWD2" ]]; then
         GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
     else
