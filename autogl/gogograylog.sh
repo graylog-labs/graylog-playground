@@ -29,7 +29,7 @@ ARCH=$(uname -m)
 
 # Exit if running as non-root user:
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${URED}CRITICAL - This script must be run as root, exiting...${NC}" 
+  echo -e "${URED}ERROR - This script must be run as root, exiting...${NC}" 
   exit 1
 fi
 
@@ -58,17 +58,14 @@ log() {
         ;;
       NOTICE)
         let prival--;;
-      WARN|WARNING)
+      WARN|WARNING) 
         let prival=$prival-2
         echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
       ERROR)
         let prival=$prival-3
-        echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
-      CRIT|CRITICAL)
-        let prival=$prival-4
-        echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
+        echo -e "${URED}$message${NC}";; # Send to stdout to notify user as well
       *)
-        log "DEBUG" "Unknown severity level $1. Supported severities are DEBUG, INFO, NOTICE, WARN, ERROR, and CRIT";;
+        log "DEBUG" "Unknown severity level $1. Supported severities are DEBUG, INFO, NOTICE, WARN, and ERROR";;
     esac
 
     # Construct the log message using an appropriate Syslog priority value
@@ -91,7 +88,7 @@ help() {
     echo " --graylog-version {version}     -- Specify Graylog version to use (defaults to latest stable)"
     echo " --opensearch-version {version}  -- Specify OpenSearch version to use (defaults to latest stable)"
     echo " --mongodb-version {version}     -- Specify MongoDB version to use (defaults to latest stable)"
-    echo " -p|--preserve                      -- Does NOT delete existing containers & volumes"
+    echo " -p|--preserve                   -- Does NOT delete existing containers & volumes"
     echo " -h|--help                       -- Prints this help message"
     exit 0
 }
@@ -106,14 +103,20 @@ help() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --graylog-version)
+      shift
+      [ $# = 0 ] && log "ERROR" "No Graylog version specified." && exit 1
       GRAYLOG_VERSION="$1"
       log "INFO" "Graylog version: $1"
       shift;;
     --opensearch-version)
+      shift
+      [ $# = 0 ] && log "ERROR" "No OpenSearch version specified." && exit 1
       OPENSEARCH_VERSION="$1"
       log "INFO" "Opensearch version: $1"
       shift;;
     --mongodb-version)
+      shift
+      [ $# = 0 ] && log "ERROR" "No MongoDB version specified." && exit 1
       MONGODB_VERSION="$1"
       log "INFO" "MongoDB version: $1"
       shift;;
@@ -139,7 +142,7 @@ date > "$LOG_FILE"
 if [ -e /etc/os-release ]; then
     source /etc/os-release
 else
-    log "CRITICAL" "No /etc/os-release file found. This script only works in Linux! Exiting..."
+    log "ERROR" "No /etc/os-release file found. This script only works in Linux! Exiting..."
     exit 1
 fi
 
@@ -206,7 +209,10 @@ if [ ! $(grep avx /proc/cpuinfo) ]; then
     echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}\n"
 fi
 
-# Cleanup old docker containers and volumes from previous runs
+# ======= #
+# Cleanup #
+# ======= #
+
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
 echo "This is generally best practice, as reusing existing volumes is problematic if changing software versions between script executions."
 echo
