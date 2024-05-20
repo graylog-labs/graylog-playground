@@ -41,7 +41,6 @@ services:
         condition: "service_started"
     entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
     environment:
-      #GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 10gb
       GRAYLOG_PASSWORD_SECRET: somepasswordpepper
       GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
