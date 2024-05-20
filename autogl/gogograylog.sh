@@ -53,32 +53,22 @@ log() {
     local prival=134
     case "$severity" in
       DEBUG)
-        let prival++
-        shift
-        ;;
+        let prival++;;
       INFO)
-        shift
         ;;
       NOTICE)
-        let prival--
-        shift
-        ;;
+        let prival--;;
       WARN|WARNING)
         let prival=$prival-2
-        shift
-        ;;
+        echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
       ERROR)
         let prival=$prival-3
-        shift
-        ;;
+        echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
       CRIT|CRITICAL)
         let prival=$prival-4
-        shift
-        ;;
+        echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
       *)
-        log "WARN" "Unknown severity level $1. Supported severities are DEBUG, INFO, NOTICE, WARN, ERROR, and CRIT"
-        shift
-        ;;
+        log "DEBUG" "Unknown severity level $1. Supported severities are DEBUG, INFO, NOTICE, WARN, ERROR, and CRIT";;
     esac
 
     # Construct the log message using an appropriate Syslog priority value
@@ -94,6 +84,19 @@ log() {
     echo "${logMessage}" >> "$LOG_FILE"
 }
 
+help() {
+    echo
+    echo "Usage:"
+    echo
+    echo " --graylog-version {version}     -- Specify Graylog version to use (defaults to latest stable)"
+    echo " --opensearch-version {version}  -- Specify OpenSearch version to use (defaults to latest stable)"
+    echo " --mongodb-version {version}     -- Specify MongoDB version to use (defaults to latest stable)"
+    echo " -p|--preserve                      -- Does NOT delete existing containers & volumes"
+    echo " -h|--help                       -- Prints this help message"
+    exit 0
+}
+
+
 
 # ================ #
 # Preflight Checks #
@@ -105,22 +108,23 @@ while [[ $# -gt 0 ]]; do
     --graylog-version)
       GRAYLOG_VERSION="$1"
       log "INFO" "Graylog version: $1"
-      shift
-      ;;
+      shift;;
     --opensearch-version)
       OPENSEARCH_VERSION="$1"
       log "INFO" "Opensearch version: $1"
-      shift
-      ;;
+      shift;;
     --mongodb-version)
       MONGODB_VERSION="$1"
       log "INFO" "MongoDB version: $1"
-      shift
-      ;;
+      shift;;
+    -p|--preserve)
+      PRESERVE=y
+      shift;;
+    -h|--help)
+      help;;
     *)
       log "WARN" "Unknown flag: $1"
-      shift
-      ;;
+      help;;
   esac
 done
 
@@ -200,6 +204,30 @@ fi
 if [ ! $(grep avx /proc/cpuinfo) ]; then
     echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}\n"
 fi
+
+# Cleanup old docker containers and volumes from previous runs
+echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
+echo "This is generally best practice, as reusing existing volumes is problematic if changing software versions between script executions."
+echo
+echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]: ${NC}"
+read x
+x=${x,,} # ,, converts value to lowercase
+if [ x == "n" ]; then
+    echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}"
+else
+    echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}"
+    docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
+    docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
+    docker volume rm -f graylog_config &>> "$LOG_FILE"
+    docker volume rm -f graylog_data &>> "$LOG_FILE"
+    docker volume rm -f graylog_journal &>> "$LOG_FILE"
+    docker volume rm -f mongodb_data &>> "$LOG_FILE"
+    docker volume rm -f opensearch_data &>> "$LOG_FILE"
+fi
+
+# ================ #
+# First User Input #
+# ================ #
 
 # Set Admin Password
 PSWD="bunk"
@@ -357,21 +385,7 @@ if [ "$WSL" ]; then
     fi
 fi
 
-#JIC Script is ran more than once, cleanup.
-GLDOVOL=$(docker volume ls | awk '{ print $2 }' | grep root_)
-if [[ $GLDOVOL == *"graylog"* ]]; then
-    echo -e "${URED}Removing Existing Graylog Docker Related Volumes${NC}"
-    docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
-    docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
-    for vol in $GLDOVOL
-    do
-        docker volume rm -f $vol &>> "$LOG_FILE"
-    done
-fi
-
 echo -e "${UGREEN}Starting up Docker Containers${NC}"
-docker compose -f ~/docker-compose.yml pull -q &>> "$LOG_FILE"
-docker compose -f ~/docker-compose.yml create &>> "$LOG_FILE"
 docker compose -f ~/docker-compose.yml up -d
 
 count=0

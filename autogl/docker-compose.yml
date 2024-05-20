@@ -25,7 +25,7 @@ services:
     - "9200:9200/tcp"   # es ports
 
     volumes:
-      - "os-data1:/usr/share/opensearch/data"
+      - "opensearch_data:/usr/share/opensearch/data"
     restart: "always"
 
   graylog:
@@ -68,7 +68,12 @@ services:
 
 volumes:
   mongodb_data:
-  os-data1:
+    name: "mongodb_data"
+  os_data:
+    name: "opensearch_data"
   graylog_data:
+    name: "graylog_data"
   graylog_journal:
+    name: "graylog_journal"
   graylog_config:
+    name: "graylog_config"
