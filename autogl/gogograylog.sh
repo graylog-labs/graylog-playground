@@ -209,8 +209,7 @@ fi
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
 echo "This is generally best practice, as reusing existing volumes is problematic if changing software versions between script executions."
 echo
-echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]: ${NC}"
-read x
+read -p "$(echo -e ${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]:${NC} )" x
 x=${x,,} # ,, converts value to lowercase
 if [ $x == "n" ]; then
     echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"
@@ -234,13 +233,13 @@ PSWD="bunk"
 until [ "$PSWD" == "$PSWD2" ]
 do
     read -sp "Enter Desired Graylog Admin Password: " PSWD
+    echo
     read -sp "Enter Desired Graylog Admin Password again: " PSWD2
     echo
     if [[ "$PSWD" == "$PSWD2" ]]; then
         GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
     else
-        echo -e "${RED}\nPasswords do not match, press enter to try again${NC}"
-        read
+        echo -e "${RED}\nPasswords do not match, please try again...${NC}\n" 
     fi
 done
 
