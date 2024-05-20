@@ -171,6 +171,11 @@ if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
 	exit 1
 fi
 
+# Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
+if [ ! $(grep avx /proc/cpuinfo) ]; then
+    NO_AVX=true
+fi
+
 
 # ===================== #
 # Main script execution #
@@ -182,38 +187,14 @@ log "INFO" "Started new gogograylog deployment!"
 # Clear current screen for cleanliness:
 clear
 
-# Display system details for user:
-echo -e "${DGRAYBG}System Information${NC}
-Total Memory:\t\t${UGREEN}$TOTAL_MEM MB${NC}
-RAM given to Graylog:\t${UGREEN}$HALF_MEM MB${NC}
-System Architecture:\t${UGREEN}$ARCH${NC}
-Internal IP:\t\t${UGREEN}$INTERNAL_IP${NC}
-External IP:\t\t${UGREEN}$EXTERNAL_IP${NC}
-Logfile:\t\t${UGREEN}$LOG_FILE${NC}\n"
+# ===================== #
+# Cleanup Previous Runs #
+# ===================== #
 
-# Memory capacity logic checks:
-if [ $TOTAL_MEM -lt 2000 ]; then
-    echo -e "Graylog ${URED}cannot run on less than 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment.\n"
-elif [ $TOTAL_MEM -lt 8000 ]; then 
-    echo -e "Graylog running on a single node will perform much better with ${URED}8GB${NC} or more system memory"
-    echo -e "Graylog will use ${URED}$HALF_MEM${NC}MB of your total: ${URED}$TOTAL_MEM${NC}MB"
-    echo -e "${UYELLOW}Performance might be impacted...${NC}\n"
-else
-    echo -e "There is more then 8GB of RAM on this host! Excellent. We will be using HALF of system RAM"
-    echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM\n"
-fi
-
-# Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
-if [ ! $(grep avx /proc/cpuinfo) ]; then
-    NO_AVX=true # value here doesn't actually matter since var will be unset if AVX support is detected. This is why I used the negative phrasing too bc NO_AVX will never be "false".
-    echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}\n"
-fi
-
-# ======= #
-# Cleanup #
-# ======= #
-
+echo -e "${URED}### IMPORTANT! ###${NC}"
+echo
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
+echo
 echo "This is generally best practice, as reusing existing volumes is problematic if changing software versions between script executions."
 echo
 read -p "$(echo -e "${URED}Confirm deletion of all existing Graylog, MongoDB, and OpenSearch containers and volumes [Y/n]:${NC} ")" x
@@ -235,9 +216,119 @@ fi
 # Delete existing docker-compose.yml file:
 [[ -e ~/docker-compose.yml ]] && rm -f ~/docker-compose.yml
 
-# ================ #
-# First User Input #
-# ================ #
+
+
+# ================= #
+# Version Selection #
+# ================= #
+
+### Graylog ###
+# Fetch available Graylog versions from Docker hub:
+GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
+# If version is supplied, validate it against list of available versions:
+if [ $GRAYLOG_VERSION ]; then
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${GRAYLOG_VERSION}[[:space:]] ]]; then
+        ver="${GRAYLOG_VERSION:0:2}"
+        echo -e "${URED}Graylog version not found: $GRAYLOG_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    # Set to latest Graylog version available:
+    GRAYLOG_VERSION=$(for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+fi
+
+### MongoDB ###
+# MongoDB tag pulling is currently borked, but that's ok bc they have a ton of addtl tags to parse through anyway, so just listing all compatible versions manually:
+MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
+# If version is supplied, validate it against list of available versions:
+if [ $MONGODB_VERSION ]; then
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${MONGODB_VERSION}[[:space:]] ]]; then
+        ver="${MONGODB_VERSION:0:2}"
+        echo -e "${URED}MongoDB version not found: $MONGODB_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    MONGODB_VERSION=$(for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+fi
+# Check if supplied MongoDB version is compatible with CPU:
+# ver="${MONGODB_VERSION:0:1}" # note that this instance $ver is diff than above. Above includes a trailing "." bc it is used for string comparison. This instance has no "." bc it is used for numeric comparison.
+# if [ $NO_AVX ] && [ $ver -ge 5 ]; then
+#     log "ERROR" "Your CPU does not support AVX Instructions, please choose a MongoDB version less than 5.x!"
+#     echo -e "Alternatively, if running this on a VM, change the vCPU generation to Intel Sandy Bridge or newer and try again."
+#     exit 1
+# fi
+
+### Opensearch ###
+# Fetch available Opensearch versions from Docker hub (excluding "latest" tag for compatibility reasons)
+OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -v "latest"))
+# If version is supplied, validate it against list of available versions:
+if [ $OPENSEARCH_VERSION ]; then
+    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
+    if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${OPENSEARCH_VERSION}[[:space:]] ]]; then
+        ver="${OPENSEARCH_VERSION:0:2}"
+        echo -e "${URED}Opensearch version not found: $OPENSEARCH_VERSION\n${NC}However we found similar ones here:"
+        # Search available version list again for partial matches of supplied version:
+        for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
+    fi
+else
+    OPENSEARCH_VERSION=$(for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+fi
+
+
+# ==================== #
+# Display Info to User #
+# ==================== #
+
+# Clear current screen for cleanliness:
+clear
+
+# Display system details for user:
+echo -e "${DGRAYBG}System Information${NC}"
+echo -e "Total Memory\t\t: ${UGREEN}$TOTAL_MEM MB${NC}"
+echo -e "RAM given to Graylog\t: ${UGREEN}$HALF_MEM MB${NC}"
+echo -e "System Architecture\t: ${UGREEN}$ARCH${NC}"
+echo -e "Internal IP\t\t: ${UGREEN}$INTERNAL_IP${NC}"
+echo -e "External IP\t\t: ${UGREEN}$EXTERNAL_IP${NC}"
+echo -e "Log file location\t: ${UGREEN}$LOG_FILE${NC}"
+echo
+echo -e "${DGRAYBG}Software Versions${NC}"
+if [ $(which docker) ]; then
+    echo -e "Docker version\t\t: ${UGREEN}$(docker -v | cut -d' ' -f3 | cut -d',' -f1)${NC}"
+else
+    echo -e "Docker version\t\t: [not installed]"
+fi
+echo -e "Graylog version\t\t: ${UGREEN}$GRAYLOG_VERSION${NC}"
+echo -e "MongoDB version\t\t: ${UGREEN}$MONGODB_VERSION${NC}"
+echo -e "Opensearch version\t: ${UGREEN}$OPENSEARCH_VERSION${NC}\n"
+
+echo -e "${DGRAYBG}Other Notices:${NC}\n"
+
+# Memory capacity logic checks:
+# TODO - Clarify the diff btwn requirement and best practice, and convey that here
+if [ $TOTAL_MEM -lt 2000 ]; then
+    echo -e "  - ${UYELLOW}WARNING!${NC} Graylog cannot run on less than 2 GB of RAM. It is recommended to provide at least ${UGREEN}8 GB${NC} of RAM for this single node deployment.\n"
+elif [ $TOTAL_MEM -lt 8000 ]; then 
+    echo -e "  - INFO: Graylog running on a single node will perform much better with at least ${UGREEN}8 GB${NC} of system memory! ${UYELLOW}Performance might be impacted...${NC}\n"
+fi
+
+read -p "Review all information above. Do you still want to proceed with deployment? [y/N] " x
+x=${x,,} # ,, converts value to lowercase
+x=${x:0:1} # reduces to first character only
+if [ "$x" != "y" ]; then
+    log "INFO" "User cancelled deployment, exiting..."
+    exit 0
+fi
+
+# =================== #
+# Configure & Install #
+# =================== #
+
+# Clear current screen for cleanliness:
+clear
 
 # Set Admin Password
 PSWD="bunk"
@@ -255,7 +346,7 @@ do
 done
 
 # Upgrade base system:
-echo -e "${UGREEN}Updating System...${NC}"
+echo -e "\n${UGREEN}Updating System...${NC}"
 if [ $(which apt-get) ]; then
     apt-get update &>> "$LOG_FILE"
     apt-get upgrade -y &>> "$LOG_FILE"
@@ -304,73 +395,12 @@ if [ ! -f ~/docker-compose.yml ]; then
     exit 1
 fi
 
-# Update docker-compose.yml with selected versions:
-### Graylog ###
-# Fetch available Graylog versions from Docker hub:
-GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
-# If version is supplied, validate it against list of available versions:
-if [ $GRAYLOG_VERSION ]; then
-    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${GRAYLOG_VERSION}[[:space:]] ]]; then
-        ver="${GRAYLOG_VERSION:0:2}"
-        echo -e "${URED}Graylog version not found: $GRAYLOG_VERSION\n${NC}However we found similar ones here:"
-        # Search available version list again for partial matches of supplied version:
-        for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
-    fi
-else
-    # Set to latest Graylog version available:
-    GRAYLOG_VERSION=$(for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
-fi
-
-### MongoDB ###
-# MongoDB tag pulling is currently borked, but that's ok bc they have a ton of addtl tags to parse through anyway, so just listing all compatible versions manually:
-MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
-# If version is supplied, validate it against list of available versions:
-if [ $MONGODB_VERSION ]; then
-    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${MONGODB_VERSION}[[:space:]] ]]; then
-        ver="${MONGODB_VERSION:0:2}"
-        echo -e "${URED}MongoDB version not found: $MONGODB_VERSION\n${NC}However we found similar ones here:"
-        # Search available version list again for partial matches of supplied version:
-        for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
-    fi
-else
-    MONGODB_VERSION=$(for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
-fi
-# Check if supplied MongoDB version is compatible with CPU:
-ver="${MONGODB_VERSION:0:1}" # note that this instance $ver is diff than above. Above includes a trailing "." bc it is used for string comparison. This instance has no "." bc it is used for numeric comparison.
-if [ $NO_AVX ] && [ $ver -ge 5 ]; then
-    log "ERROR" "Your CPU does not support AVX Instructions, please choose a MongoDB version less than 5.x!"
-    echo -e "Alternatively, if running this on a VM, change the vCPU generation to Intel Sandy Bridge or newer and try again."
-    exit 1
-fi
-
-### Opensearch ###
-# Fetch available Opensearch versions from Docker hub:
-OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r))
-# If version is supplied, validate it against list of available versions:
-if [ $OPENSEARCH_VERSION ]; then
-    # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
-    if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ [[:space:]]${OPENSEARCH_VERSION}[[:space:]] ]]; then
-        ver="${OPENSEARCH_VERSION:0:2}"
-        echo -e "${URED}Opensearch version not found: $OPENSEARCH_VERSION\n${NC}However we found similar ones here:"
-        # Search available version list again for partial matches of supplied version:
-        for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
-    fi
-else
-    OPENSEARCH_VERSION="latest"
-fi
-
-echo -e "Graylog version    : $GRAYLOG_VERSION"
-echo -e "MongoDB version    : $MONGODB_VERSION"
-echo -e "Opensearch version : $OPENSEARCH_VERSION"
-
-# Update docker-compose.yml with Graylog stack versions:
+# Update docker-compose.yml:
 sed -i "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
 sed -i "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
 sed -i "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
 
-echo -e "${UGREEN}Updating Memory Configurations to match system${NC}"
+echo -e "\n${UGREEN}Updating Memory Configurations to match system${NC}"
 sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "s+Xmx2g+Xmx$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -Xmx$Q_RAM\m -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true\"" ~/docker-compose.yml
@@ -402,7 +432,13 @@ if [ "$WSL" ]; then
     fi
 fi
 
-echo -e "${UGREEN}Starting up Docker Containers${NC}"
+
+
+# ============== #
+# Launch Graylog #
+# ============== #
+
+echo -e "\n${UGREEN}Starting up Docker Containers${NC}"
 docker compose -f ~/docker-compose.yml up -d
 
 count=0
@@ -417,12 +453,12 @@ while ! curl -s -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes 
     fi   
 done
 
-#Add inputs via CP
+# Add inputs via CP
 curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
 #wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
 for entry in ~/gl_*
 do
-  echo -e "\n\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
+  echo -e "\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
   id=$(cat $entry | jq -r '.id')
   ver=$(cat $entry | jq -r '.rev')
   echo -e "\n\nID:${UGREEN}$id${NC} and Version: ${UGREEN}$ver${NC}\n"
