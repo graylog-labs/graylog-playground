@@ -216,6 +216,9 @@ fi
 # Delete existing docker-compose.yml file:
 [[ -e ~/docker-compose.yml ]] && rm -f ~/docker-compose.yml
 
+# Clear current screen for cleanliness:
+clear
+
 
 
 # ================= #
