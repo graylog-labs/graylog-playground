@@ -94,23 +94,6 @@ log() {
     echo "${logMessage}" >> "$LOG_FILE"
 }
 
-addFirewallRule() {
-	if [ $(which yum) ]; then
-        IPTABLESLOC="/etc/sysconfig/iptables"
-    else
-        IPTABLESLOC="/etc/iptables/rules.v4"
-    fi
-    echo -e "Adding firewall rule for port $1 $2 ($3) via $FIREWALL..."
-    case "$FIREWALL" in
-		none) echo -e "${URED}No firewall installed, please add port $1 manually to your inbound firewall${NC}" ;;
-		ufw) ufw allow from any to any port "$1" proto $2 comment "$3" ;;
-		firewalld) firewall-cmd "--add-port=$1/$2" --permanent && firewall-cmd --reload ;;
-		iptables) iptables -A INPUT -p $2 -m $2 --dport "$1" -j ACCEPT -m comment --comment "$3" && iptables-save > $IPTABLESLOC ;;
-		nft) nft add rule filter INPUT $2 dport "$1" accept comment "\"$3\"" ;;
-		*) echo -e "${URED}Unsupported Firewall: $FIREWALL${NC}" ;;
-	esac
-}
-
 
 # ================ #
 # Preflight Checks #
@@ -178,12 +161,7 @@ fi
 # CPU arch check
 if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
 	echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
-	exit 64
-fi
-
-# Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
-if [ ! $(grep avx /proc/cpuinfo) ]; then
-    echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}"
+	exit 1
 fi
 
 
@@ -204,30 +182,32 @@ RAM given to Graylog:\t${UGREEN}$HALF_MEM MB${NC}
 System Architecture:\t${UGREEN}$ARCH${NC}
 Internal IP:\t\t${UGREEN}$INTERNAL_IP${NC}
 External IP:\t\t${UGREEN}$EXTERNAL_IP${NC}
-Logfile:\t\t${UGREEN}$LOG_FILE${NC}
-"
+Logfile:\t\t${UGREEN}$LOG_FILE${NC}\n"
 
 # Memory capacity logic checks:
 if [ $TOTAL_MEM -lt 2000 ]; then
-    echo -e "Graylog ${URED}cannot run on less then 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment"
+    echo -e "Graylog ${URED}cannot run on less than 2GB of RAM.${NC} It is recommended to provide at least ${UGREEN}8GB of RAM${NC} for this single node deployment.\n"
 elif [ $TOTAL_MEM -lt 8000 ]; then 
     echo -e "Graylog running on a single node will perform much better with ${URED}8GB${NC} or more system memory"
     echo -e "Graylog will use ${URED}$HALF_MEM${NC}MB of your total: ${URED}$TOTAL_MEM${NC}MB"
-    echo -e "${UYELLOW}Performance might be impacted...${NC}"
+    echo -e "${UYELLOW}Performance might be impacted...${NC}\n"
 else
     echo -e "There is more then 8GB of RAM on this host! Excellent. We will be using HALF of system RAM"
-    echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM"
+    echo -e "Graylog will use ${UGREEN}$HALF_MEM${NC}MB of your total: ${UGREEN}$TOTAL_MEM${NC}MB system RAM\n"
+fi
+
+# Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
+if [ ! $(grep avx /proc/cpuinfo) ]; then
+    echo -e "${UYELLOW}Your CPU does not support AVX instructions, so you cannot install MongoDB v5.0 or later.${NC}\n"
 fi
 
 # Set Admin Password
 PSWD="bunk"
 until [ "$PSWD" == "$PSWD2" ]
 do
-    echo -e "${GREEN}\nEnter Desired Graylog Login Password${NC}"
-    read -s -p "Password: " PSWD
-    echo -e "${GREEN}\nEnter Desired Graylog Login Password again${NC}"
-    read -s -p "Password: " PSWD2
-    echo -e "\n"
+    read -sp "Enter Desired Graylog Admin Password: " PSWD
+    read -sp "Enter Desired Graylog Admin Password again: " PSWD2
+    echo -e ""
     if [[ "$PSWD" == "$PSWD2" ]]; then
         GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
     else
@@ -235,13 +215,6 @@ do
         read
     fi
 done
-
-FIREWALL=none
-if [ $(which ufw) ]; then FIREWALL=ufw;
-elif [ $(which firewall-cmd) ]; then FIREWALL=firewalld;
-elif [ $(which nft) ]; then FIREWALL=nft;
-elif [ $(which iptables) ]; then FIREWALL=iptables; 
-fi
 
 # Upgrade base system:
 echo -e "${UGREEN}Updating System...${NC}"
@@ -295,14 +268,13 @@ fi
 
 # Update docker-compose.yml with selected versions:
 ### Graylog ###
+# Fetch available Graylog versions from Docker hub:
+GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
 # If version is supplied, validate it against list of available versions:
 if [ $GRAYLOG_VERSION ]; then
-    # Fetch available Graylog versions from Docker hub:
-    GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
     if [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ ^$GRAYLOG_VERSION$ ]]; then
         ver="${GRAYLOG_VERSION:0:2}"
-        echo $ver
         echo -e "${URED}Graylog version not found: $GRAYLOG_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
         for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
@@ -313,15 +285,13 @@ else
 fi
 
 ### MongoDB ###
+# MongoDB tag pulling is currently borked, but that's ok bc they have a ton of addtl tags to parse through anyway, so just listing all compatible versions manually:
+MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
 # If version is supplied, validate it against list of available versions:
 if [ $MONGODB_VERSION ]; then
-    # Fetch available Graylog versions from Docker hub:
-    # MongoDB tag pulling is currently borked, but that's ok bc they have a ton of addtl tags to parse through anyway, so just listing all compatible versions manually:
-    MONGODB_VERSIONS_AVAILABLE=(4.0 4.2 4.4 5.0 6.0 7.0)
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
     if [[ ! "${MONGODB_VERSIONS_AVAILABLE[@]}" =~ ^$MONGODB_VERSION$ ]]; then
         ver="${MONGODB_VERSION:0:2}"
-        echo $ver
         echo -e "${URED}MongoDB version not found: $MONGODB_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
         for i in "${MONGODB_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
@@ -331,14 +301,13 @@ else
 fi
 
 ### Opensearch ###
+# Fetch available Opensearch versions from Docker hub:
+OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r))
 # If version is supplied, validate it against list of available versions:
 if [ $OPENSEARCH_VERSION ]; then
-    # Fetch available Graylog versions from Docker hub:
-    OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r))
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
     if [[ ! "${OPENSEARCH_VERSIONS_AVAILABLE[@]}" =~ ^$OPENSEARCH_VERSION$ ]]; then
         ver="${OPENSEARCH_VERSION:0:2}"
-        echo $ver
         echo -e "${URED}Opensearch version not found: $OPENSEARCH_VERSION\n${NC}However we found similar ones here:"
         # Search available version list again for partial matches of supplied version:
         for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do [[ $i =~ ^$ver ]] && echo $i; done
@@ -347,28 +316,14 @@ else
     OPENSEARCH_VERSION="latest"
 fi
 
-# Update docker-compose.yml with Graylog stack versions:
-sed -n "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/p" ~/.env
-sed -n "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/p" ~/.env
-sed -n "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/p" ~/.env
+echo -e "Graylog version    : $GRAYLOG_VERSION"
+echo -e "MongoDB version    : $MONGODB_VERSION"
+echo -e "Opensearch version : $OPENSEARCH_VERSION"
 
-# Add firewall rules if necessary:
-if [[ "$FIREWALL" != "none" ]]; then
-    echo -e "${UGREEN}Adding Firewall Rules for Graylog Service Ports and Inputs${NC}"
-    addFirewallRule "443" "tcp" "Default GUI"
-    addFirewallRule "514" "tcp" "Syslog TCP Input"
-    addFirewallRule "514" "udp" "Syslog TCP Input"
-    addFirewallRule "5044" "tcp" "Beats TCP Input"
-    addFirewallRule "5050" "tcp" "RAW TCP Input"
-    addFirewallRule "5050" "udp" "RAW UDP Input"
-    addFirewallRule "5555" "tcp" "CEF TCP Input"
-    addFirewallRule "5555" "udp" "CEF UDP Input"
-    addFirewallRule "5556" "tcp" "Palo Alto Networks v9+ TCP Input"
-    addFirewallRule "5557" "tcp" "Palo Alto Networks v8.x TCP Input"
-    addFirewallRule "9000" "tcp" "Default GUI"
-    addFirewallRule "12201" "tcp" "GELF TCP Input"
-    addFirewallRule "12201" "udp" "GELF UDP Input"
-fi
+# Update docker-compose.yml with Graylog stack versions:
+sed -i "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
+sed -i "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
+sed -i "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
 
 echo -e "${UGREEN}Updating Memory Configurations to match system${NC}"
 sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
