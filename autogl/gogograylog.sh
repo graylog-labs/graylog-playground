@@ -164,11 +164,11 @@ fi
 # Install prerequisites:
 log "INFO" "Installing prerequisites..."
 if [ $(which apt-get) ]; then
-    apt-get update
-    apt-get install -y ca-certificates curl gnupg lsb-release jq curl
+    apt-get update &>> "$LOG_FILE"
+    apt-get install -y ca-certificates curl gnupg lsb-release jq curl &>> "$LOG_FILE"
 elif [ $(which yum) ]; then
-    yum check-update
-    yum install -y ca-certificates curl gnupg lsb-release jq curl yum-utils
+    yum check-update &>> "$LOG_FILE"
+    yum install -y ca-certificates curl gnupg lsb-release jq curl yum-utils &>> "$LOG_FILE"
 else
     echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
     echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
