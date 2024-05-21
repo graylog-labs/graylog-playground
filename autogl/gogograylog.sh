@@ -448,7 +448,10 @@ if [ "$WSL" ]; then
     fi
 fi
 
-
+# Install syslog replay script:
+curl https://raw.githubusercontent.com/mrworkman/replay-syslog/master/replay-syslog.pl -o ~/replay-syslog.pl &>> "$LOG_FILE"
+chmod 777 ~/replay-syslog.pl
+mkdir --mode=755 ~/log-samples
 
 # ============== #
 # Launch Graylog #
