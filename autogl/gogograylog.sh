@@ -372,15 +372,6 @@ do
     fi
 done
 
-# Upgrade base system:
-echo -e "\n${UGREEN}Updating base system...${NC}"
-if [ $(which apt-get) ]; then
-    apt-get update &>> "$LOG_FILE"
-    apt-get upgrade -y &>> "$LOG_FILE"
-elif [ $(which yum) ]; then
-    yum update -y &>> "$LOG_FILE"
-fi
-
 # Install Docker
 if [ $(which docker) ]; then
     echo -e "\n${UGREEN}Docker version installed:${NC} $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
