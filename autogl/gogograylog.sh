@@ -56,15 +56,21 @@ log() {
     local prival=134
     case "$severity" in
       DEBUG)
+        # Use for sending info needed only when troubleshooting
         let prival++;;
       INFO)
+        # Use for sending good to know command output, but not need to know during script execution
         ;;
       NOTICE)
-        let prival--;;
-      WARN|WARNING) 
+        # Use for sending need to know info during script execution, but not anything that needs to be addressed
+        let prival--
+        echo -e "$message";; # Send to stdout to notify user as well
+      WARN|WARNING)
+        # Use for warning user about something that may need to be addressed but does not break anything
         let prival=$prival-2
         echo -e "${UYELLOW}$message${NC}";; # Send to stdout to notify user as well
       ERROR)
+        # Use to show output of commands that break script execution. Should always be followed by an exit 1
         let prival=$prival-3
         echo -e "${URED}$message${NC}";; # Send to stdout to notify user as well
       *)
