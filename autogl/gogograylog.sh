@@ -161,12 +161,18 @@ else
 	INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
 fi
 
-# Get external IP of system:
-if [ $(which curl) ]; then
-	EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
-else
-	EXTERNAL_IP=$(wget -qO- https://ipecho.net/plain --no-check-certificate 2> /dev/null)
+# Install prerequisites:
+log "INFO" "Installing prerequisites..."
+if [ $(which apt-get) ]; then
+    apt-get update
+    apt-get install -y ca-certificates curl gnupg lsb-release jq curl
+elif
+    yum check-update
+    yum install -y ca-certificates curl gnupg lsb-release jq curl yum-utils
 fi
+
+# Get external IP of system:
+EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
 
 # CPU arch check
 if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
@@ -205,15 +211,17 @@ x=${x,,} # ,, converts value to lowercase
 if [ "$x" == "n" ]; then
     echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"
 else
-    echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}\n"
-    docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
-    docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
-    docker volume rm -f graylog_config &>> "$LOG_FILE"
-    docker volume rm -f graylog_data &>> "$LOG_FILE"
-    docker volume rm -f graylog_journal &>> "$LOG_FILE"
-    docker volume rm -f mongodb_data &>> "$LOG_FILE"
-    docker volume rm -f opensearch_data &>> "$LOG_FILE"
-    docker network rm -f graylog_network &>> "$LOG_FILE"
+    if [ $(which docker) ]; then
+        echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}\n"
+        docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
+        docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
+        docker volume rm -f graylog_config &>> "$LOG_FILE"
+        docker volume rm -f graylog_data &>> "$LOG_FILE"
+        docker volume rm -f graylog_journal &>> "$LOG_FILE"
+        docker volume rm -f mongodb_data &>> "$LOG_FILE"
+        docker volume rm -f opensearch_data &>> "$LOG_FILE"
+        docker network rm -f graylog_network &>> "$LOG_FILE"
+    fi
 fi
 
 # Delete existing docker-compose.yml file:
@@ -374,18 +382,16 @@ if [ $(which docker) ]; then
 else
     if [ $(which apt-get) ]; then
         export DEBIAN_FRONTEND=noninteractive
-        echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
-        apt-get install -y ca-certificates curl gnupg lsb-release &>> "$LOG_FILE"
+        echo -e "\n${UGREEN}Installing Docker...${NC}"
         mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
         curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
         echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
     elif [ $(which yum) ]; then
         echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
-        yum install -y yum-utils &>> "$LOG_FILE"
         # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
-        yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin jq &>> "$LOG_FILE"
+        yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
     else
         echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
         echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
@@ -395,13 +401,8 @@ else
 fi
 
 # Fetch docker-compose.yml from repo:
-if [ $(which curl) ]; then
-	curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
-    curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -o ~/.env &>> "$LOG_FILE"
-else
-	wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -P ~/ &>> "$LOG_FILE"
-    wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -P ~/ &>> "$LOG_FILE"
-fi
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -o ~/.env &>> "$LOG_FILE"
 
 # Exit if failed to get docker-compose.yml from repo:
 if [ ! -f ~/docker-compose.yml ]; then
@@ -479,16 +480,15 @@ done
 
 # Add inputs via CP
 curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
-#wget https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -P ~/ &>> "$LOG_FILE"
 for entry in ~/gl_*
 do
   echo -e "\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
-  id=$(cat $entry | jq -r '.id')
-  ver=$(cat $entry | jq -r '.rev')
-  echo -e "\n\nID:${UGREEN}$id${NC} and Version: ${UGREEN}$ver${NC}\n"
+  CP_ID=$(cat $entry | jq -r '.id')
+  CP_VER=$(cat $entry | jq -r '.rev')
+  echo -e "\n\nID:${UGREEN}$CP_ID${NC} and Version: ${UGREEN}$CP_VER${NC}\n"
   curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs"  -H 'Content-Type: application/json' -H 'X-Requested-By: PS_Packer' -d @"$entry" &>> "$LOG_FILE"
   echo -e "\n\nEnabling Content Package: ${UGREEN}gl_starter_pack${NC}\n"
-  curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs/$id/$ver/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
+  curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs/$CP_ID/$CP_VER/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
 done
 
 clear
