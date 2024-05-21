@@ -11,10 +11,13 @@
 
 # Formatting vars:
 NC='\033[0m' # default color/format
+RED='\033[0;31m' # red
 URED='\033[4;31m' # underlined red
 UGREEN='\033[4;32m' # underlined green
 UYELLOW='\033[4;33m' # underlined yellow
+BRED='\033[1;31m' # bold red
 BGREEN='\033[1;32m' # bold green
+BCYAN='\033[1;36m' # bold cyan
 DGRAYBG='\033[0;100m' # dark gray background
 
 # Flag vars:
@@ -412,7 +415,8 @@ sed -i "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
 sed -i "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
 sed -i "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
 
-echo -e "\n${UGREEN}Updating Memory Configurations to match system${NC}"
+echo
+log "NOTICE" "Updating Memory configurations to match system specs..."
 sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "s+Xmx2g+Xmx$Q_RAM\m+g" ~/docker-compose.yml
 sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -Xmx$Q_RAM\m -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true\"" ~/docker-compose.yml
@@ -488,13 +492,28 @@ do
   curl -u "admin:$PSWD" -XPOST "http://localhost:9000/api/system/content_packs/$CP_ID/$CP_VER/installations" -H 'Content-Type: application/json' -H 'X-Requested-By: PS_TeamAwesome' -d '{"parameters":{},"comment":""}' &>> "$LOG_FILE"
 done
 
+
+
+# ================== #
+# Final Info Display #
+# ================== #
+
+# Clear current screen for cleanliness:
 clear
-echo -e "${BGREEN}Your Graylog Instance is up and running\nAcceess it here: ${UYELLOW}http://$INTERNAL_IP:9000${BGREEN}\nIf external access it here: ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
-echo -e "${BGREEN}Default user: ${UYELLOW}admin${NC}"
-echo -e "${BGREEN}Password: ${UYELLOW}$PSWD${NC}"
-echo -e "Docker Compose file is located: ${UYELLOW}$(ls ~/docker-compose.yml)${NC}"
-echo -e "Make changes as needed to open more ports for inputs!"
-echo -e "To make changes, edit the compose file and run:\n${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
+
+echo -e "${BGREEN}Your Graylog Instance is up and running"'!'"${NC}\n"
+echo -e "Internal URL:\t ${UYELLOW}http://$INTERNAL_IP:9000${NC}"
+echo -e "External URL:\t ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
+echo -e "Default user:\t ${RED}admin${NC}"
+echo -e "Password:\t ${RED}$PSWD${NC}\n"
+echo -e "Docker Compose file:\t ${BGREEN}$(ls ~/docker-compose.yml)${NC}\n"
+echo -e "To make changes, edit the compose file and run:"
+echo -e "${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
+echo
+echo -e "Happy Logging!"
+echo
+echo -e " ${BCYAN}- The Graylog Team${NC}"
+echo
 
 unset PSWD
 unset PSWD2
