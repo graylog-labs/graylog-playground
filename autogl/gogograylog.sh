@@ -111,6 +111,11 @@ help() {
 # Preflight Checks #
 # ================ #
 
+# Clear current screen for cleanliness:
+clear
+
+log "NOTICE" "Executing preflight checks..."
+
 # Process flags
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -134,6 +139,9 @@ while [[ $# -gt 0 ]]; do
       shift;;
     -p|--preserve)
       PRESERVE=y
+      shift;;
+    --random-password)
+      RANDOM_PASSWORD=y
       shift;;
     -h|--help)
       help;;
@@ -367,19 +375,24 @@ fi
 clear
 
 # Set Admin Password
-PSWD="bunk"
-until [ "$PSWD" == "$PSWD2" ]
-do
-    read -sp "Enter Desired Graylog Admin Password: " PSWD
-    echo
-    read -sp "Enter Desired Graylog Admin Password again: " PSWD2
-    echo
-    if [[ "$PSWD" == "$PSWD2" ]]; then
-        GLSHA256=$(echo $PSWD | tr -d '\n'| sha256sum | cut -d" " -f1)
-    else
-        echo -e "${RED}\nPasswords do not match, please try again...${NC}\n" 
-    fi
-done
+if [ $RANDOM_PASSWORD ]; then
+    PSWD="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24; echo)"
+    GLSHA256=$(echo "$PSWD" | tr -d '\n'| sha256sum | cut -d" " -f1)
+else
+    PSWD="bunk"
+    until [ "$PSWD" == "$PSWD2" ]
+    do
+        read -sp "Enter Desired Graylog Admin Password: " PSWD
+        echo
+        read -sp "Enter Desired Graylog Admin Password again: " PSWD2
+        echo
+        if [[ "$PSWD" == "$PSWD2" ]]; then
+            GLSHA256=$(echo "$PSWD" | tr -d '\n'| sha256sum | cut -d" " -f1)
+        else
+            echo -e "${RED}\nPasswords do not match, please try again...${NC}\n" 
+        fi
+    done
+fi
 
 # Install Docker
 if [ $(which docker) ]; then
@@ -451,7 +464,9 @@ fi
 # Install syslog replay script:
 curl https://raw.githubusercontent.com/mrworkman/replay-syslog/master/replay-syslog.pl -o ~/replay-syslog.pl &>> "$LOG_FILE"
 chmod 777 ~/replay-syslog.pl
-mkdir --mode=755 ~/log-samples
+if [ ! -d ~/log-samples ]; then
+    mkdir --mode=755 ~/log-samples
+fi
 
 # ============== #
 # Launch Graylog #
@@ -471,7 +486,7 @@ if [ ! $(docker container inspect -f '{{.State.Running}}' graylog) ]; then
 fi
 
 count=0
-while ! curl -s -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes &>> "$LOG_FILE"; do
+while [[ ! $(curl -sI -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes | head -n1 | cut -d' ' -f2) =~ ^2 ]] &>> "$LOG_FILE"; do
 	((count++))
     if [ "$count" -eq "30" ]; then
         echo -e "${URED}Welp. Something went terribly wrong. Check the log file: $LOG_FILE. I'm giving up now! Byeeeeee${NC}"
