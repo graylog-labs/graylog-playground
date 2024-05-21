@@ -166,9 +166,14 @@ log "INFO" "Installing prerequisites..."
 if [ $(which apt-get) ]; then
     apt-get update
     apt-get install -y ca-certificates curl gnupg lsb-release jq curl
-elif
+elif [ $(which yum) ]; then
     yum check-update
     yum install -y ca-certificates curl gnupg lsb-release jq curl yum-utils
+else
+    echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
+    echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
+    echo -e "${UGREEN}$NAME${URED} is not a supported distribution at this time.${NC}"
+    exit 1
 fi
 
 # Get external IP of system:
@@ -387,16 +392,11 @@ else
         curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
         echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
-    elif [ $(which yum) ]; then
+    else
         echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
         # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
         yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
-    else
-        echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
-        echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
-        echo -e "${UGREEN}$NAME${URED} is not a supported distribution at this time.${NC}"
-        exit 1
     fi
 fi
 
