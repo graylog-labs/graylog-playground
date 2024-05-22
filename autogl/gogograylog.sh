@@ -24,6 +24,7 @@ DGRAYBG='\033[0;100m' # dark gray background
 GRAYLOG_VERSION=
 OPENSEARCH_VERSION=
 MONGODB_VERSION=
+BRANCH="main"
 
 # External system vars:
 LOG_FILE="/var/log/graylog-server/deploy-graylog.log"
@@ -191,7 +192,7 @@ else
 fi
 
 # Install prerequisites:
-log "INFO" "Installing prerequisites..."
+log "NOTICE" "Installing prerequisites..."
 if [ $(which apt-get) ]; then
     apt-get update &>> "$LOG_FILE"
     apt-get install -y ca-certificates curl gnupg lsb-release jq curl &>> "$LOG_FILE"
@@ -407,6 +408,7 @@ else
 fi
 
 # Install Docker
+clear
 if [ $(which docker) ]; then
     echo -e "\n${UGREEN}Docker version installed:${NC} $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
 else
@@ -420,11 +422,13 @@ else
         echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
         apt-get update
         apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        clear
     else
         echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
         # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
         yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        clear
     fi
 fi
 
@@ -537,8 +541,8 @@ clear
 echo -e "${BGREEN}Your Graylog Instance is up and running"'!'"${NC}\n"
 echo -e "Internal URL:\t ${UYELLOW}http://$INTERNAL_IP:9000${NC}"
 echo -e "External URL:\t ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
-echo -e "Default user:\t ${RED}admin${NC}"
-echo -e "Password:\t ${RED}$PSWD${NC}\n"
+echo -e "Default user:\t ${BCYAN}admin${NC}"
+echo -e "Password:\t ${BCYAN}$PSWD${NC}\n"
 echo -e "Docker Compose file:\t ${BGREEN}$(ls ~/docker-compose.yml)${NC}\n"
 echo -e "To make changes, edit the compose file and run:"
 echo -e "${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
