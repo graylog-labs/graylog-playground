@@ -2,8 +2,12 @@
 # Graylog Automated Docker Install
 # Recommend 16GB of RAM and at least 2 cpus but it CAN run on less
 
-# Validated this script works on the following distros (as of May 20 2024):
-# Debian 12
+# Validated this script works on the following distros (as of May 22 2024):
+# Debian 10, 11, 12
+# Ubuntu 20.04, 22.04, 24.04
+# RHEL 
+# CentOS
+# Rocky Linux 
 
 # =========================== #
 # Initialize global variables #
@@ -84,12 +88,12 @@ log() {
     # Construct the log message using an appropriate Syslog priority value
     # so we don't have to summon Satan every time we deploy Graylog :)
     local logMessage="<$prival>1 [$timestamp] - $severity - $message"
-    
+
     # Create log dir if does not exist already
     if [ ! -d /var/log/graylog-server ]; then
         mkdir /var/log/graylog-server
     fi
-    
+
     # Append the log message to the file
     echo "${logMessage}" >> "$LOG_FILE"
 }
@@ -117,6 +121,7 @@ help() {
 clear
 
 log "NOTICE" "Executing preflight checks..."
+echo
 
 # Process flags
 while [[ $# -gt 0 ]]; do
@@ -185,20 +190,21 @@ if grep -qi microsoft /proc/version; then
 fi
 
 # Get interface IP address of system
-if [ $(which ip) ]; then
-	read -r _{,} GATEWAY_IP _ _ _ INTERNAL_IP _ < <(ip r g 1.0.0.0)
+if [ $(command -v ip) ]; then
+    read -r _{,} GATEWAY_IP _ _ _ INTERNAL_IP _ < <(ip r g 1.0.0.0)
 else
-	INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
+    INTERNAL_IP=$(hostname -I | cut -f 1 -d ' ')
 fi
 
 # Install prerequisites:
 log "NOTICE" "Installing prerequisites..."
-if [ $(which apt-get) ]; then
+echo
+if [ $(command -v apt-get) ]; then
     apt-get update &>> "$LOG_FILE"
     apt-get install -y ca-certificates curl gnupg lsb-release jq curl &>> "$LOG_FILE"
-elif [ $(which yum) ]; then
+elif [ $(command -v yum) ]; then
     yum check-update &>> "$LOG_FILE"
-    yum install -y ca-certificates curl gnupg lsb-release jq curl yum-utils &>> "$LOG_FILE"
+    yum install -y ca-certificates curl gnupg jq curl yum-utils &>> "$LOG_FILE"
 else
     echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
     echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
@@ -211,8 +217,8 @@ EXTERNAL_IP=$(curl https://ipecho.net/plain -k 2> /dev/null)
 
 # CPU arch check
 if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "aarch64" ]; then
-	echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
-	exit 1
+    echo -e "${URED}Graylog is only supported on x86_64 systems. You are running $ARCH${NC}"
+    exit 1
 fi
 
 # Check for AVX support in CPU (bc MongoDB 5.0+ needs it):
@@ -235,7 +241,7 @@ clear
 # Cleanup Previous Runs #
 # ===================== #
 
-log "NOTICE" "${URED}### IMPORTANT! ###${NC}"
+echo -e "${URED}### IMPORTANT! ###${NC}"
 echo
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
 echo
@@ -246,7 +252,7 @@ x=${x,,} # ,, converts value to lowercase
 if [ "$x" == "n" ]; then
     echo -e "${UGREEN}NOT deleting existing Docker containers & volumes. Note: You can skip this prompt next time by passing the '--preserve' flag to the script!${NC}\n"
 else
-    if [ $(which docker) ]; then
+    if [ $(command -v docker) ]; then
         echo -e "${URED}Deleting existing Graylog Docker containers and volumes...${NC}\n"
         docker compose -f ~/docker-compose.yml stop &>> "$LOG_FILE" 
         docker compose -f ~/docker-compose.yml rm -f &>> "$LOG_FILE" 
@@ -353,7 +359,7 @@ echo -e "External IP\t\t: ${UGREEN}$EXTERNAL_IP${NC}"
 echo -e "Log file location\t: ${UGREEN}$LOG_FILE${NC}"
 echo
 echo -e "${DGRAYBG}Software Versions${NC}"
-if [ $(which docker) ]; then
+if [ $(command -v docker) ]; then
     echo -e "Docker version\t\t: ${UGREEN}$(docker -v | cut -d' ' -f3 | cut -d',' -f1)${NC}"
 else
     echo -e "Docker version\t\t: [not installed]"
@@ -409,14 +415,14 @@ fi
 
 # Install Docker
 clear
-if [ $(which docker) ]; then
+if [ $(command -v docker) ]; then
     echo -e "\n${UGREEN}Docker version installed:${NC} $(docker -v | cut -d' ' -f3 | cut -d',' -f1)"
 else
-    if [ $(which apt-get) ]; then
+    if [ $(command -v apt-get) ]; then
         export DEBIAN_FRONTEND=noninteractive
         echo -e "\n${UGREEN}Installing Docker...${NC}"
         # First, uninstall old packages if still present:
-        apt-get remove docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc
+        for i in $(dpkg --get-selections | grep -E "(docker|containerd|runc)" | awk '{ print $1 }'); do apt-get remove $i; done
         mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
         curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
         echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
@@ -425,6 +431,8 @@ else
         clear
     else
         echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
+        # First, uninstall old packages if still present:
+        for i in $(yum list installed | grep -E "(docker|containerd|runc)" | awk '{ print $1 }'); do yum remove $i; done
         # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
         yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
@@ -456,7 +464,7 @@ sed -i "s+941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6+$GLSH
 unset GLSHA256
 
 #Because RH
-if [ $(which yum) ]; then
+if [ $(command -v yum) ]; then
     systemctl enable docker.service &>> "$LOG_FILE"
     systemctl restart docker &>> "$LOG_FILE"
 fi
@@ -506,7 +514,7 @@ fi
 
 count=0
 while [[ ! $(curl -sI -u "admin:$PSWD" http://localhost:9000/api/system/cluster/nodes | head -n1 | cut -d' ' -f2) =~ ^2 ]] &>> "$LOG_FILE"; do
-	((count++))
+    ((count++))
     if [ "$count" -eq "30" ]; then
         echo -e "${URED}Welp. Something went terribly wrong. Check the log file: $LOG_FILE. I'm giving up now! Byeeeeee${NC}"
         exit 1
@@ -542,7 +550,7 @@ echo -e "${BGREEN}Your Graylog Instance is up and running"'!'"${NC}\n"
 echo -e "Internal URL:\t ${UYELLOW}http://$INTERNAL_IP:9000${NC}"
 echo -e "External URL:\t ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
 echo -e "Default user:\t ${BCYAN}admin${NC}"
-echo -e "Password:\t ${BCYAN}$PSWD${NC}\n"
+echo -e "Password:\t ${BRED}$PSWD${NC}\n"
 echo -e "Docker Compose file:\t ${BGREEN}$(ls ~/docker-compose.yml)${NC}\n"
 echo -e "To make changes, edit the compose file and run:"
 echo -e "${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
