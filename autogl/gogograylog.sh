@@ -101,6 +101,7 @@ help() {
     echo " --opensearch-version {version}  -- Specify OpenSearch version to use (defaults to latest stable)"
     echo " --mongodb-version {version}     -- Specify MongoDB version to use (defaults to latest stable)"
     echo " -p|--preserve                   -- Does NOT delete existing containers & volumes"
+    echo " --branch [branch]               -- Specify which branch of the script to use. Defaults to \"main.\" Only use if you know what you are doing!"
     echo " -h|--help                       -- Prints this help message"
     exit 0
 }
@@ -139,9 +140,20 @@ while [[ $# -gt 0 ]]; do
       shift;;
     -p|--preserve)
       PRESERVE=y
+      log "NOTICE" "Preserving existing Docker environment."
       shift;;
     --random-password)
       RANDOM_PASSWORD=y
+      log "NOTICE" "Using random Graylog admin password."
+      shift;;
+    --branch)
+      shift
+      if [ $# = 0 ]; then
+        log "WARN" "No branch specified, defaulting to \"main\""
+      else
+        BRANCH="$1"
+        log "NOTICE" "Using branch \"$1\" of this script, good luck!"
+      fi
       shift;;
     -h|--help)
       help;;
@@ -222,7 +234,7 @@ clear
 # Cleanup Previous Runs #
 # ===================== #
 
-echo -e "${URED}### IMPORTANT! ###${NC}"
+log "NOTICE" "${URED}### IMPORTANT! ###${NC}"
 echo
 echo "By default, this script performs a clean install of Graylog, MongoDB, and OpenSearch, deleting existing containers and volumes from previous runs of this script."
 echo
@@ -401,21 +413,24 @@ else
     if [ $(which apt-get) ]; then
         export DEBIAN_FRONTEND=noninteractive
         echo -e "\n${UGREEN}Installing Docker...${NC}"
+        # First, uninstall old packages if still present:
+        apt-get remove docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc
         mkdir -p /etc/apt/keyrings &>> "$LOG_FILE"
         curl -fsSL https://download.docker.com/linux/$ID/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
         echo -e "\n\ndeb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$ID $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     else
         echo -e "\n${UGREEN}Installing Docker and prerequisites...${NC}"
         # Force using CentOS repo since RHEL on x86_64 isn't supported yet:
         yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo &>> "$LOG_FILE"
-        yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin &>> "$LOG_FILE"
+        yum install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     fi
 fi
 
 # Fetch docker-compose.yml from repo:
-curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
-curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/.env -o ~/.env &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/$BRANCH/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/$BRANCH/autogl/.env -o ~/.env &>> "$LOG_FILE"
 
 # Exit if failed to get docker-compose.yml from repo:
 if [ ! -f ~/docker-compose.yml ]; then
@@ -498,7 +513,7 @@ while [[ ! $(curl -sI -u "admin:$PSWD" http://localhost:9000/api/system/cluster/
 done
 
 # Add inputs via CP
-curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/add-version-selection/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
+curl https://raw.githubusercontent.com/graylog-labs/graylog-playground/$BRANCH/autogl/gl_starter_pack.json -o ~/gl_starter_pack.json &>> "$LOG_FILE"
 for entry in ~/gl_*
 do
   echo -e "\nInstalling Content Package: ${UGREEN}$entry${NC}\n"
