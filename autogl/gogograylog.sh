@@ -5,9 +5,9 @@
 # Validated this script works on the following distros (as of May 22 2024):
 # Debian 10, 11, 12
 # Ubuntu 20.04, 22.04, 24.04
-# RHEL 9
-# CentOS Stream 9
-# Rocky Linux 9
+# RHEL 8, 9
+# CentOS Stream 8, 9
+# Rocky Linux 8, 9
 
 # =========================== #
 # Initialize global variables #
@@ -196,13 +196,21 @@ fi
 
 # Install prerequisites:
 log "NOTICE" "Installing prerequisites..."
+
+# Install jq separately bc 1) it has no runtime deps, and 2) it is not available in RHEL 7 at all. 
+# So installing it from its Github repo avoids unnecessary logic below.
+curl -fsSL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux64 -o /usr/bin/jq
+chmod +x /usr/bin/jq
+# Use jq to make sure you have the latest non-rc version installed (ugly I know but can't think of a better way right now)
+curl -fsSL https://github.com/jqlang/jq/releases/download/$(curl -fsSL https://api.github.com/repos/jqlang/jq/tags | jq -r '.[0].name | select(test("rc")|not?)')/jq-linux64 -o /usr/bin/jq
+
 echo
 if [ $(command -v apt-get) ]; then
     apt-get update &>> "$LOG_FILE"
     apt-get install -y ca-certificates curl gnupg lsb-release jq curl &>> "$LOG_FILE"
 elif [ $(command -v yum) ]; then
     yum check-update &>> "$LOG_FILE"
-    yum install -y ca-certificates curl gnupg jq curl yum-utils &>> "$LOG_FILE"
+    yum install -y ca-certificates curl gnupg curl yum-utils &>> "$LOG_FILE"
 else
     echo -e "${URED}This system doesn't appear to be supported. No supported package manager ${UGREEN}(apt/yum)${URED} was found."
     echo -e "Automated installation is only availble for Debian and Red-Hat based distributions, including ${UGREEN}Ubuntu${URED} and ${UGREEN}CentOS${URED}."
