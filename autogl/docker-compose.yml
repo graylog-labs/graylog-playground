@@ -11,7 +11,7 @@ services:
   opensearch:
     container_name: opensearch
     environment:
-      OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g -Dlog4j2.formatMsgNoLookups=true"
+      OPENSEARCH_JAVA_OPTS: "-Xms${OPENSEARCH_MEMORY}g -Xmx${OPENSEARCH_MEMORY}g -Dlog4j2.formatMsgNoLookups=true"
       bootstrap.memory_lock: "true"
       discovery.type: "single-node"
       http.host: "0.0.0.0"
@@ -33,7 +33,7 @@ services:
 
   graylog:
     container_name: graylog
-    image: "graylog/graylog-enterprise:6.0.3-1"
+    image: "graylog/graylog-enterprise:${GRAYLOG_VERSION}"
     depends_on:
       opensearch:
         condition: "service_started"
@@ -42,23 +42,24 @@ services:
     entrypoint: "/usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh"
     environment:
       GRAYLOG_PASSWORD_SECRET: somepasswordpepper
-      GRAYLOG_ROOT_PASSWORD_SHA2: 941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2}
       GRAYLOG_ELASTICSEARCH_HOSTS: "http://opensearch:9200"
+      GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GRAYLOG_MEMORY}g -Xmx${GRAYLOG_MEMORY}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
       GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
     ports:
-      - "443:443/tcp"     # Server API
-      - "514:514/udp"     # Syslog UDP
-      - "514:514/tcp"     # Syslog TCP
-      - "5044:5044/tcp"   # Beats
-      - "5050:5050/tcp"   # RAW TCP
-      - "5050:5050/udp"   # RAW UDP
-      - "5555:5555/tcp"   # CEF TCP
-      - "5555:5555/udp"   # CEF UDP
-      - "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
-      - "5557:5557/tcp"   # Palo Alto Networks v8.x TCP
-      - "9000:9000/tcp"   # Server API
-      - "12201:12201/tcp" # GELF TCP
-      - "12201:12201/udp" # GELF UDP
+      - "443:443/tcp"     # Server API encrpyted
+      #- "514:514/udp"     # Syslog UDP
+      #- "514:514/tcp"     # Syslog TCP
+      #- "5044:5044/tcp"   # Beats
+      #- "5050:5050/tcp"   # RAW TCP
+      #- "5050:5050/udp"   # RAW UDP
+      #- "5555:5555/tcp"   # CEF TCP
+      #- "5555:5555/udp"   # CEF UDP
+      #- "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
+      #- "5557:5557/tcp"   # Palo Alto Networks v8.x TCP
+      - "9000:9000/tcp"   # Server API plaintext
+      #- "12201:12201/tcp" # GELF TCP
+      #- "12201:12201/udp" # GELF UDP
     networks:
       - graylog_network
     volumes:
