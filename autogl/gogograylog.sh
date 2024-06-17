@@ -588,19 +588,25 @@ done
 # Clear current screen for cleanliness:
 clear
 
-echo -e "${BGREEN}Your Graylog Instance is up and running"'!'"${NC}\n"
-echo -e "Internal URL:\t ${UYELLOW}http://$INTERNAL_IP:9000${NC}"
-echo -e "External URL:\t ${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
-echo -e "Default user:\t ${BCYAN}admin${NC}"
-echo -e "Password:\t ${BRED}$PSWD${NC}\n"
-echo -e "Docker Compose file:\t ${BGREEN}$(ls ~/docker-compose.yml)${NC}\n"
+echo -e "${BGREEN}Your Graylog Instance is up and running!${NC}"
+echo -e "Internal URL:\t\t${UYELLOW}http://$INTERNAL_IP:9000${NC}"
+echo -e "External URL:\t\t${UYELLOW}http://$EXTERNAL_IP:9000${NC}"
+echo -e "Default user:\t\t${BCYAN}admin${NC}"
+echo -e "Password:\t\t${BRED}$PSWD${NC}"
+echo -e "Docker Compose file:\t${BGREEN}$(ls ~/docker-compose.yml)${NC}"
+echo
 echo -e "To make changes, edit the compose file and run:"
 echo -e "${UYELLOW}docker compose -f ~/docker-compose.yml up -d${NC}"
 echo
+echo -e "Next Steps:"
+echo
+echo -e "\t1. Uncomment ports in $(ls ~/docker-compose.yml) to expose Inputs"
+echo -e "\t2. Send in logs"
+echo -e "\t3. Check out www.graylog.com for news and updates!"
+echo
 echo -e "Happy Logging!"
 echo
-echo -e " ${BCYAN}- The Graylog Team${NC}"
-echo
+echo -e "  ${BCYAN}- The Graylog Team${NC}\n"
 
 unset PSWD
 unset PSWD2
