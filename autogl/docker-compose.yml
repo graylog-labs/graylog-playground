@@ -47,19 +47,19 @@ services:
       GRAYLOG_SERVER_JAVA_OPTS: "-Xms${GRAYLOG_MEMORY}g -Xmx${GRAYLOG_MEMORY}g -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true"
       GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
     ports:
-      - "443:443/tcp"     # Server API
-      - "514:514/udp"     # Syslog UDP
-      - "514:514/tcp"     # Syslog TCP
-      - "5044:5044/tcp"   # Beats
-      - "5050:5050/tcp"   # RAW TCP
-      - "5050:5050/udp"   # RAW UDP
-      - "5555:5555/tcp"   # CEF TCP
-      - "5555:5555/udp"   # CEF UDP
-      - "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
-      - "5557:5557/tcp"   # Palo Alto Networks v8.x TCP
-      - "9000:9000/tcp"   # Server API
-      - "12201:12201/tcp" # GELF TCP
-      - "12201:12201/udp" # GELF UDP
+      - "443:443/tcp"     # Server API encrpyted
+      #- "514:514/udp"     # Syslog UDP
+      #- "514:514/tcp"     # Syslog TCP
+      #- "5044:5044/tcp"   # Beats
+      #- "5050:5050/tcp"   # RAW TCP
+      #- "5050:5050/udp"   # RAW UDP
+      #- "5555:5555/tcp"   # CEF TCP
+      #- "5555:5555/udp"   # CEF UDP
+      #- "5556:5556/tcp"   # Palo Alto Networks v9+ TCP
+      #- "5557:5557/tcp"   # Palo Alto Networks v8.x TCP
+      - "9000:9000/tcp"   # Server API plaintext
+      #- "12201:12201/tcp" # GELF TCP
+      #- "12201:12201/udp" # GELF UDP
     networks:
       - graylog_network
     volumes:
