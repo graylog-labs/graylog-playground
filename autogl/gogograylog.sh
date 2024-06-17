@@ -28,7 +28,7 @@ DGRAYBG='\033[0;100m' # dark gray background
 GRAYLOG_VERSION=
 OPENSEARCH_VERSION=
 MONGODB_VERSION=
-BRANCH="add-ram-override"
+BRANCH="main"
 
 # External system vars:
 LOG_FILE="/var/log/graylog-server/deploy-graylog.log"
