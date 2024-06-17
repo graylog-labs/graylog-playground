@@ -32,10 +32,9 @@ BRANCH="main"
 
 # External system vars:
 LOG_FILE="/var/log/graylog-server/deploy-graylog.log"
-TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024;}' < /proc/meminfo)
-MEM_USED=$(awk '/MemTotal/{printf "%d\n", $2 * .5 / 1024;}' < /proc/meminfo)
-HALF_MEM=$((TOTAL_MEM/2))
-Q_RAM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024;}' < /proc/meminfo)
+TOTAL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 / 1024 / 1024;}' < /proc/meminfo)
+GL_MEM=
+OS_MEM=
 ARCH=$(uname -m)
 
 # Exit if running as non-root user:
@@ -102,9 +101,11 @@ help() {
     echo
     echo "gogograylog.sh Usage:"
     echo
-    echo -e " --graylog {version}\t\t-- Specify Graylog version to use (defaults to latest stable)"
-    echo -e " --opensearch {version}\t\t-- Specify OpenSearch version to use (defaults to latest stable)"
-    echo -e " --mongodb {version}\t\t-- Specify MongoDB version to use (defaults to latest stable)"
+    echo -e " --graylog [version]\t\t-- Specify Graylog version to use (defaults to latest stable)"
+    echo -e " --opensearch [version]\t\t-- Specify OpenSearch version to use (defaults to latest stable)"
+    echo -e " --mongodb [version]\t\t-- Specify MongoDB version to use (defaults to latest stable)"
+    echo -e " --graylog-memory [N]gb\t-- Specify GB of RAM for Graylog (defaults to 25% of system memory)"
+    echo -e " --opensearch-memory [N]gb\t-- Specify GB of RAM for OpenSearch (defaults to 25% of system memory)"
     echo -e " -p|--preserve\t\t\t-- Does NOT delete existing containers & volumes"
     echo -e " --branch [branch]\t\t-- Specify which branch of the script to use. Defaults to \"main.\" Only use if you know what you are doing!"
     echo -e " -h|--help\t\t\t-- Prints this help message"
@@ -155,6 +156,16 @@ while [[ $# -gt 0 ]]; do
         BRANCH="$1"
         echo -e "\n${UYELLOW}Using branch \"$1\" of this script, good luck!${NC}\n"
       fi
+      shift;;
+    --graylog-memory)
+      shift
+      GL_MEM=$(echo $1 | tr -d [[:alpha:]])
+      log "NOTICE" "${UYELLOW}User override:${NC} Using ${UYELLOW}$GL_MEM GB${NC} of RAM for Graylog.\n"
+      shift;;
+    --opensearch-memory)
+      shift
+      OS_MEM=$(echo $1 | tr -d [[:alpha:]])
+      log "NOTICE" "${UYELLOW}User override:${NC} Using ${UYELLOW}$OS_MEM GB${NC} of RAM for OpenSearch.\n"
       shift;;
     -h|--help)
       help;;
@@ -231,6 +242,22 @@ fi
 if [ ! $(grep avx /proc/cpuinfo) ]; then
     NO_AVX=true
 fi
+
+# Determine default Graylog & OpenSearch RAM assignment:
+if [ -z $GL_MEM ] && [ -z $OS_MEM ]; then
+    # Set OpenSearch mem to 50% system mem, max of 31:
+    OS_MEM=$((TOTAL_MEM / 2))
+    if [ $OS_MEM -gt 31 ]; then
+        OS_MEM=31
+    fi
+
+    # Set Graylog mem to 25% system mem, max of 8:
+    GL_MEM=$(awk '/MemTotal/{printf "%d\n", $2 * .25 / 1024 / 1024;}' < /proc/meminfo)
+    if [ $GL_MEM -gt 8 ]; then
+        GL_MEM=8
+    fi
+fi
+
 
 
 # ===================== #
@@ -360,8 +387,9 @@ clear
 
 # Display system details for user:
 echo -e "${DGRAYBG}System Information${NC}"
-echo -e "Total Memory\t\t: ${UGREEN}$TOTAL_MEM MB${NC}"
-echo -e "RAM given to Graylog\t: ${UGREEN}$HALF_MEM MB${NC}"
+echo -e "Total Memory\t\t: ${UGREEN}$TOTAL_MEM GB${NC}"
+echo -e "RAM given to Graylog\t: ${UGREEN}$GL_MEM GB${NC}"
+echo -e "RAM given to OpenSearch\t: ${UGREEN}$OS_MEM GB${NC}"
 echo -e "System Architecture\t: ${UGREEN}$ARCH${NC}"
 echo -e "Internal IP\t\t: ${UGREEN}$INTERNAL_IP${NC}"
 echo -e "External IP\t\t: ${UGREEN}$EXTERNAL_IP${NC}"
@@ -380,14 +408,13 @@ echo -e "Opensearch version\t: ${UGREEN}$OPENSEARCH_VERSION${NC}\n"
 echo -e "${DGRAYBG}Other Notices:${NC}\n"
 
 # Memory capacity logic checks:
-# TODO - Clarify the diff btwn requirement and best practice, and convey that here
-if [ $TOTAL_MEM -lt 2000 ]; then
-    echo -e "  - ${UYELLOW}WARNING!${NC} Graylog cannot run on less than 2 GB of RAM. It is recommended to provide at least ${UGREEN}8 GB${NC} of RAM for this single node deployment.\n"
-elif [ $TOTAL_MEM -lt 8000 ]; then
-    echo -e "  - INFO: Graylog running on a single node will perform much better with at least ${UGREEN}8 GB${NC} of system memory! ${UYELLOW}Performance might be impacted...${NC}\n"
+if [ $TOTAL_MEM -le 2 ]; then
+    echo -e "  - ${UYELLOW}WARNING:${NC} Your system only has ${UYELLOW}$TOTAL_MEM${NG} GB of RAM. Graylog and OpenSearch should have at least ${UYELLOW}1 GB of RAM EACH${NG}. ${URED}Continuing with this deployment may break your machine!${NC}\n"
+elif [ $TOTAL_MEM -le 8 ]; then
+    echo -e "  - NOTICE: Graylog running on a single node will perform much better with at least ${UGREEN}8 GB${NC} of system memory! ${UYELLOW}Performance might be impacted...${NC}\n"
 fi
 
-[ $PRESERVE] && log "NOTICE" " - Preserving existing Docker environment."
+[ $PRESERVE ] && log "NOTICE" " - Preserving existing Docker environment."
 [ $RANDOM_PASSWORD ] && log "NOTICE" " - Using random Graylog admin password."
 
 echo
@@ -463,17 +490,14 @@ if [ ! -f ~/docker-compose.yml ]; then
     exit 1
 fi
 
-# Update docker-compose.yml:
+# Update .env:
+log "NOTICE" "Updating Docker configurations to match specified specs..."
 sed -i "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
 sed -i "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
 sed -i "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
-
-echo
-log "NOTICE" "Updating Memory configurations to match system specs..."
-sed -i "s+Xms2g+Xms$Q_RAM\m+g" ~/docker-compose.yml
-sed -i "s+Xmx2g+Xmx$Q_RAM\m+g" ~/docker-compose.yml
-sed -i "/GRAYLOG_MONGODB_URI/a\      \GRAYLOG_SERVER_JAVA_OPTS: \"-Xms$Q_RAM\m -Xmx$Q_RAM\m -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:-OmitStackTraceInFastThrow -Djdk.tls.acknowledgeCloseNotify=true -Dlog4j2.formatMsgNoLookups=true\"" ~/docker-compose.yml
-sed -i "s+941828f6268291fa3aa87a866e8367e609434f42761bdf02dc7fc7958897bae6+$GLSHA256+g" ~/docker-compose.yml
+sed -i "s/GRAYLOG_MEMORY=/GRAYLOG_MEMORY=$GL_MEM/" ~/.env
+sed -i "s/OPENSEARCH_MEMORY=/OPENSEARCH_MEMORY=$OS_MEM/" ~/.env
+sed -i "s/GRAYLOG_ROOT_PASSWORD_SHA2=/GRAYLOG_ROOT_PASSWORD_SHA2=$GLSHA256/" ~/.env
 unset GLSHA256
 
 #Because RH
