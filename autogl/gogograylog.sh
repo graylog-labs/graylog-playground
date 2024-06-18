@@ -104,10 +104,10 @@ help() {
     echo -e " --graylog [version]\t\t-- Specify Graylog version to use (defaults to latest stable)"
     echo -e " --opensearch [version]\t\t-- Specify OpenSearch version to use (defaults to latest stable)"
     echo -e " --mongodb [version]\t\t-- Specify MongoDB version to use (defaults to latest stable)"
-    echo -e " --graylog-memory [N]gb\t-- Specify GB of RAM for Graylog (defaults to 25% of system memory)"
+    echo -e " --graylog-memory [N]gb\t\t-- Specify GB of RAM for Graylog (defaults to 25% of system memory)"
     echo -e " --opensearch-memory [N]gb\t-- Specify GB of RAM for OpenSearch (defaults to 25% of system memory)"
     echo -e " -p|--preserve\t\t\t-- Does NOT delete existing containers & volumes"
-    echo -e " --branch [branch]\t\t-- Specify which branch of the script to use. Defaults to \"main.\" Only use if you know what you are doing!"
+    echo -e " --branch [branch]\t\t-- Specify which git branch of the script to use. Defaults to \"main.\" Only use if you know what you are doing!"
     echo -e " -h|--help\t\t\t-- Prints this help message"
     exit 0
 }
