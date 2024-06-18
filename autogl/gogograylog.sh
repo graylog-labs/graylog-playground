@@ -311,10 +311,11 @@ clear
 # ================= #
 
 ### Graylog ###
-# Fetch available Graylog versions from Docker hub:
-GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/graylog/repositories/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -Ev "\-1$"))
-# If version is supplied, validate it against list of available versions:
+# If user specified a Graylog version, check it against available versions.
+# Else fetch and use latest GA Graylog version.
 if [ $GRAYLOG_VERSION ]; then
+    # Fetch ALL available Graylog versions from Docker hub:
+    GRAYLOG_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sort --version-sort))
     # If version supplied is not found in list of available versions, search the list again for the first 2 characters of the supplied version for suggestions:
     while [[ ! "${GRAYLOG_VERSIONS_AVAILABLE[@]}" =~ (^| )"$GRAYLOG_VERSION"( |$) ]]; do
         ver="${GRAYLOG_VERSION:0:2}"
@@ -326,8 +327,7 @@ if [ $GRAYLOG_VERSION ]; then
         clear
     done
 else
-    # Set to latest Graylog version available:
-    GRAYLOG_VERSION=$(for i in "${GRAYLOG_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+    GRAYLOG_VERSION=$(curl -sL --fail "https://hub.docker.com/v2/repositories/graylog/graylog/tags/?page_size=1000" | jq '.results | .[] | .name' -r | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | awk '!/-rc/' | grep -v "\-1$" | tail -n1)
 fi
 
 ### MongoDB ###
@@ -480,7 +480,7 @@ else
     fi
 fi
 
-# Fetch docker-compose.yml from repo:
+# Fetch docker-compose.yml and .env files from repo:
 curl -fsSL https://raw.githubusercontent.com/graylog-labs/graylog-playground/$BRANCH/autogl/docker-compose.yml -o ~/docker-compose.yml &>> "$LOG_FILE"
 curl -fsSL https://raw.githubusercontent.com/graylog-labs/graylog-playground/$BRANCH/autogl/.env -o ~/.env &>> "$LOG_FILE"
 
@@ -492,12 +492,12 @@ fi
 
 # Update .env:
 log "NOTICE" "Updating Docker configurations to match specified specs..."
-sed -i "s/GRAYLOG_VERSION=/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
-sed -i "s/MONGODB_VERSION=/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
-sed -i "s/OPENSEARCH_VERSION=/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
-sed -i "s/GRAYLOG_MEMORY=/GRAYLOG_MEMORY=$GL_MEM/" ~/.env
-sed -i "s/OPENSEARCH_MEMORY=/OPENSEARCH_MEMORY=$OS_MEM/" ~/.env
-sed -i "s/GRAYLOG_ROOT_PASSWORD_SHA2=/GRAYLOG_ROOT_PASSWORD_SHA2=$GLSHA256/" ~/.env
+sed -i "s/GRAYLOG_VERSION=.*/GRAYLOG_VERSION=$GRAYLOG_VERSION/" ~/.env
+sed -i "s/MONGODB_VERSION=.*/MONGODB_VERSION=$MONGODB_VERSION/" ~/.env
+sed -i "s/OPENSEARCH_VERSION=.*/OPENSEARCH_VERSION=$OPENSEARCH_VERSION/" ~/.env
+sed -i "s/GRAYLOG_MEMORY=.*/GRAYLOG_MEMORY=$GL_MEM/" ~/.env
+sed -i "s/OPENSEARCH_MEMORY=.*/OPENSEARCH_MEMORY=$OS_MEM/" ~/.env
+sed -i "s/GRAYLOG_ROOT_PASSWORD_SHA2=.*/GRAYLOG_ROOT_PASSWORD_SHA2=$GLSHA256/" ~/.env
 unset GLSHA256
 
 #Because RH
