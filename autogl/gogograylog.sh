@@ -358,7 +358,8 @@ if [ $NO_AVX ] && [ $ver -ge 5 ]; then
 fi
 
 ### Opensearch ###
-# Fetch available Opensearch versions from Docker hub (excluding "latest" tag for compatibility reasons)
+# If user specified an Opensearch version, check it against available versions.
+# Else fetch and use latest stable version (hard limit of 2.x for now until 3.x goes GA AND is supported by Graylog)
 OPENSEARCH_VERSIONS_AVAILABLE=($(curl -sL --fail "https://hub.docker.com/v2/namespaces/opensearchproject/repositories/opensearch/tags/?page_size=1000" | jq '.results | .[] | .name' -r | grep -v "latest"))
 # If version is supplied, validate it against list of available versions:
 if [ $OPENSEARCH_VERSION ]; then
@@ -373,7 +374,7 @@ if [ $OPENSEARCH_VERSION ]; then
         clear
     done
 else
-    OPENSEARCH_VERSION=$(for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | tail -n 1)
+    OPENSEARCH_VERSION=$(for i in "${OPENSEARCH_VERSIONS_AVAILABLE[@]}"; do echo $i; done | sort --version-sort | awk '!/beta/' | awk '!/alpha/' | awk '!/-rc/' | awk '!/3/' | grep -v "\-1$" |  tail -n 1)
 fi
 
 
